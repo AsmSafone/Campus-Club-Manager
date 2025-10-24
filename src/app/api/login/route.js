@@ -1,0 +1,36 @@
+import db from "@/lib/db";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+export async function POST(req) {
+  try {
+    const { email, password } = await req.json();
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    const user = rows[0];
+    if (!user) return new Response(JSON.stringify({ error: "Invalid email" }), { status: 401 });
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return new Response(JSON.stringify({ error: "Invalid password" }), { status: 401 });
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    // --- Set token as cookie ---
+    const headers = new Headers();
+    headers.append(
+      "Set-Cookie",
+      `token=${token}; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax`
+    );
+
+    return new Response(JSON.stringify({ message: "Login success", role: user.role }), {
+      status: 200,
+      headers,
+    });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ error: "Login failed" }), { status: 500 });
+  }
+}

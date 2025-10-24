@@ -1,0 +1,1 @@
+ALTER TABLE `users` CHANGE `role` `role` ENUM('admin','executive','member','guest') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'guest';
