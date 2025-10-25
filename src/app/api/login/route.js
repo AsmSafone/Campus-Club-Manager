@@ -3,6 +3,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export async function POST(req) {
+  db.connect().then(() => {
+    console.log("Database connected successfully.");
+  }).catch((err) => { 
+    console.error("Error connecting to database in login:", err);
+  });
+
   try {
     const { email, password } = await req.json();
     const [rows] = await db.query("SELECT * FROM User WHERE email = ?", [email]);

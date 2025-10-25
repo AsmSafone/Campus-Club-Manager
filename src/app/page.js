@@ -6,8 +6,8 @@ export default function HomePage() {
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({
     name: '',
-    email: '',
-    password: '',
+    email: 'admin@gmail.com',
+    password: '1234',
   });
   const [loading, setLoading] = useState(false);
 
