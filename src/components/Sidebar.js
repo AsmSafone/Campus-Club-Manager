@@ -23,6 +23,7 @@ export default function Sidebar() {
     const links = [
         { name: "Dashboard Home", path: `/dashboard/${role}`, roles: ["admin", "executive", "member", "guest"] },
         { name: "Manage Clubs", path: "/dashboard/admin/clubs", roles: ["admin"] },
+        { name: "Manage Members", path: "/dashboard/admin/members", roles: ["executive"] },
         { name: "Manage Events", path: "/dashboard/executive/events", roles: ["executive"] },
         { name: "Public Events", path: "/dashboard/guest/events", roles: ["guest", "member", "executive", "admin"] },
     ];

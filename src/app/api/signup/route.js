@@ -9,12 +9,12 @@ export async function POST(req) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const [existing] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    const [existing] = await db.query("SELECT * FROM User WHERE email = ?", [email]);
     if (existing.length) {
         return new Response(JSON.stringify({ error: "User already exists" }), { status: 400 });
     }
 
-    await db.query("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", [
+    await db.query("INSERT INTO User (name, email, password) VALUES (?, ?, ?)", [
         name,
         email,
         hashedPassword,

@@ -24,14 +24,26 @@ export async function middleware(req) {
     const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
 
     // ✅ 4. Role-based route control (optional)
-    if (pathname.startsWith("/dashboard/admin") && payload.role !== "admin") {
-      return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
-    }
-    if (pathname.startsWith("/dashboard/executive") && payload.role !== "executive") {
-      return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
-    }
-    if (pathname.startsWith("/dashboard/member") && payload.role !== "member") {
-      return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
+    // if (pathname.startsWith("/dashboard/admin") && payload.role !== "admin") {
+    //   return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
+    // }
+    // if (pathname.startsWith("/dashboard/executive") && payload.role !== "executive") {
+    //   return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
+    // }
+    // if (pathname.startsWith("/dashboard/member") && payload.role !== "member") {
+    //   return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
+    // }
+    switch (payload.role) {
+      case "admin":
+        return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
+      case "executive":
+        return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
+      case "member":
+        return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
+      case "guest":
+        return NextResponse.redirect(new URL(`/dashboard/${payload.role}`, req.url));
+      default:
+        break;
     }
 
     // ✅ Allow valid request
