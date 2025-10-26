@@ -8,6 +8,11 @@ export default function ManageClubs() {
     const [clubs, setClubs] = useState([]);
     const [form, setForm] = useState({ name: "", description: "" });
     const [role, setRole] = useState("");
+    const [userModel, setUserModel] = useState(false)
+    const [memberModel, setMemberModel] = useState(false);
+    const [selectedClub, setSelectedClub] = useState(null);
+    const [users, setUsers] = useState([]);
+    const [members, setMembers] = useState([]);
 
     useEffect(() => {
         const verifyRole = async () => {
@@ -18,7 +23,6 @@ export default function ManageClubs() {
                     alert("Access Denied: Admins Only");
                     router.push(`/dashboard/${data.role}`);
                 } else {
-                    setRole(data.role);
                     loadClubs();
                 }
             } else {
@@ -52,37 +56,80 @@ export default function ManageClubs() {
         }
     };
 
-    const [showModal, setShowModal] = useState(false);
-    const [selectedClub, setSelectedClub] = useState(null);
-    const [users, setUsers] = useState([]);
+    const loadMembers = async (club) => {
+        const res = await fetch("/api/members" + "?clubId=" + club.club_id);
+        if (res.ok) {
+            const data = await res.json();
+            setMembers(data);
+        }
+    };
 
     const loadUsers = async () => {
-        const res = await fetch("/api/members");
+        const res = await fetch("/api/users" + "?clubId=" + selectedClub.club_id);
         if (res.ok) {
             const data = await res.json();
             setUsers(data);
         }
     };
 
-    const handleManageExecutives = (club) => {
+    const handleManageClub = (club) => {
         setSelectedClub(club);
-        setShowModal(true);
-        loadUsers();
+        setMemberModel(true);
+        loadMembers(club);
     };
 
-    const updateExecutive = async (userId, clubId, role) => {
-        const res = await fetch("/api/clubs/", {
+    const addMemberToclub = async (userId) => {
+        const res = await fetch("/api/members/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 clubId: selectedClub.club_id,
-                userId: userId
+                userId: userId,
             }),
         });
         if (res.ok) {
-            alert("Executive updated successfully");
-            setShowModal(false);
-            loadClubs();
+            alert("Member added successfully");
+            loadMembers(selectedClub);
+            loadUsers();
+        }
+        if (!res.ok) {
+            const data = await res.json();
+            alert(data.message);
+        }
+    };
+
+    const removeMemberFromClub = async (userId) => {
+        const res = await fetch("/api/members?userId=" + userId + "&clubId=" + selectedClub.club_id, {
+            method: "DELETE",
+        });
+        if (res.ok) {
+            alert("Member removed successfully");
+            loadMembers(selectedClub);
+            loadUsers();
+        }
+        if (!res.ok) {
+            const data = await res.json();
+            alert(data.message);
+        }
+    };
+
+    const updateMembershipRole = async (role,member) => {
+        const res = await fetch("/api/members/", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                membershipId: member.membership_id,
+                userId: member.user_id,
+                role: role
+            }),
+        });
+        if (res.ok) {
+            alert("Membership role updated successfully");
+            loadMembers(selectedClub);
+        }
+        if (!res.ok) {
+            const data = await res.json();
+            alert(data.message);
         }
     };
 
@@ -127,9 +174,9 @@ export default function ManageClubs() {
                         </div>
                         <div className="flex gap-2">
                             <button
-                                onClick={() => handleManageExecutives(club)}
+                                onClick={() => handleManageClub(club)}
                                 className="bg-yellow-500 text-white px-3 py-1 rounded-lg cursor-pointer text-sm">
-                                Manage Executives
+                                Manage
                             </button>
                             <button
                                 onClick={() => fetch("/api/clubs?id=" + club.club_id, { method: "DELETE" })
@@ -147,35 +194,72 @@ export default function ManageClubs() {
                 ))}
             </ul>
 
-            {showModal && (
+            {memberModel && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white p-6 rounded-lg w-1/2">
-                        <h2 className="text-xl font-bold mb-4">Manage Executives - {selectedClub.name}</h2>
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-bold mb-4">Manage Executives - {selectedClub.name}</h2>
+                            <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg cursor-pointer" onClick={async () => { await loadUsers(); setUserModel(!userModel); }}>Add Members</button>
+                        </div>
                         <div className="max-h-96 overflow-y-auto">
-                            {users.map(user => (
-                                <div key={user.user_id} className="flex justify-between items-center p-2 border-b">
-                                    <span>{user.name} ({user.email})</span>
+                            {members.map(member => (
+                                <div key={member.user_id} className="flex justify-between items-center p-2 border-b">
+                                    <span>{member.name} ({member.email}) ({member.user_role})</span>
                                     <div className="flex gap-2">
-                                        {['President', 'Secretary', 'Member'].map(role => 'guest' === user.role && <button
-                                            onClick={() => updateExecutive(user.id, selectedClub.club_id, role)}
-                                            className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
-                                            key={role}
-                                        >
-                                            Set as {role}
-                                        </button>)}
+                                        <select className="p-2 rounded" onChange={(e) => e.target.value && updateMembershipRole(e.target.value, member)} value={member.membership_role}>
+                                            <option value="">{member.membership_role}</option>
+                                            <option value="President">President</option>
+                                            <option value="Secretary">Secretary</option>
+                                            <option value="Member">Member</option>
+                                        </select>
+                                        <button className="bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer" onClick={()=>removeMemberFromClub(member.user_id)}>Remove</button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                         <button
-                            onClick={() => setShowModal(false)}
+                            onClick={() => setMemberModel(false)}
                             className="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg"
                         >
                             Close
                         </button>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+
+            {
+                userModel && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <div className="bg-white p-6 rounded-lg w-1/2">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-xl font-bold mb-4">Add Members - {selectedClub.name}</h2>
+                            </div>
+                            <div className="max-h-96 overflow-y-auto">
+                                {users.map(user => (
+                                    <div key={user.user_id} className="flex justify-between items-center p-2 border-b">
+                                        <span>{user.name} ({user.email})</span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => addMemberToclub(user.user_id)}
+                                                className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setUserModel(false)}
+                                className="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
