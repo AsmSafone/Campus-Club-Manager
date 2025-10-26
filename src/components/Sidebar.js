@@ -22,11 +22,13 @@ export default function Sidebar() {
 
     const links = [
         { name: "Dashboard Home", path: `/dashboard/${role}`, roles: ["admin", "executive", "member", "guest"] },
-        { name: "Browse Clubs", path: `/dashboard/guest/clubs`, roles: ["executive", "member", "guest"] },
+        { name: "Browse Clubs", path: `/dashboard/guest/clubs`, roles: ["guest"] },
         { name: "Manage Clubs", path: "/dashboard/admin/clubs", roles: ["admin"] },
-        { name: "Manage Members", path: "/dashboard/admin/members", roles: ["executive"] },
+        { name: "Manage Members", path: "/dashboard/admin/members", roles: ["admin"] },
         { name: "Manage Events", path: "/dashboard/executive/events", roles: ["executive"] },
-        { name: "Public Events", path: "/dashboard/guest/events", roles: ["guest", "member", "executive", "admin"] },
+        { name: "Browse Events", path: "/dashboard/guest/events", roles: ["guest"] },
+        { name: "Club Events", path: "/dashboard/member/events", roles: ["member"] },
+        { name: "Make Payments", path: "/dashboard/member/payments", roles: ["member"] },
     ];
 
 

@@ -1,9 +1,9 @@
 import db from "@/lib/db";
 import verifyToken from "@/lib/verifyToken";
 
-// 🧠 Get all events (anyone can view)
+// 🧠 Get all Event (anyone can view)
 export async function GET() {
-  const [rows] = await db.query("SELECT * FROM events");
+  const [rows] = await db.query("SELECT * FROM Event");
   return new Response(JSON.stringify(rows), { status: 200 });
 }
 
@@ -13,10 +13,15 @@ export async function POST(req) {
   if (!user || user.role !== "executive")
     return new Response("Forbidden", { status: 403 });
 
-  const { title, description, date, club_id } = await req.json();
+  const { title, description, date, club_id, venue } = await req.json();
+  if (!title || !description || !date || !club_id || !venue) {
+    return new Response(JSON.stringify({ message: "Missing required fields" }), {
+      status: 400,
+    });
+  }
   await db.query(
-    "INSERT INTO events (title, description, date, club_id, created_by) VALUES (?, ?, ?, ?, ?)",
-    [title, description, date, club_id, user.id]
+    "INSERT INTO Event (title, description, date, club_id, venue) VALUES (?, ?, ?, ?, ?)",
+    [title, description, date, club_id, venue]
   );
 
   return new Response(JSON.stringify({ message: "Event created" }), { status: 201 });
@@ -29,8 +34,8 @@ export async function DELETE(req) {
     return new Response("Forbidden", { status: 403 });
 
   const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
+  const id = searchParams.get("eventId");
 
-  await db.query("DELETE FROM events WHERE id = ?", [id]);
+  await db.query("DELETE FROM Event WHERE event_id = ?", [id]);
   return new Response(JSON.stringify({ message: "Event deleted" }), { status: 200 });
 }

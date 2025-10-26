@@ -7,6 +7,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [userRole, setUserRole] = useState("");
+  const [user, setUser] = useState({})
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -14,6 +15,8 @@ export default function Navbar() {
         const res = await fetch("/api/user");
         if (res.ok) {
           const data = await res.json();
+          console.log(data);
+          setUser(data.user);
           setUserRole(data.role);
         } else {
           router.push("/");
@@ -40,6 +43,7 @@ export default function Navbar() {
       </h1>
 
       <div className="flex items-center gap-6">
+        <span className="text-gray-700 capitalize">👤 {user.name}</span>
         <span className="text-gray-700 capitalize">{userRole}</span>
         <button
           onClick={handleLogout}
