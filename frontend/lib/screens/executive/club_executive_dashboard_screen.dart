@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/financial_overview_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'club_events_screen.dart';
-import 'finance_transactions_screen.dart';
-import 'club_executive_club_management_screen.dart';
-import 'notification_view_screen.dart';
+import '../club_events_screen.dart';
+import '../finance_transactions_screen.dart';
+import '../club_executive_club_management_screen.dart';
+import '../notification_view_screen.dart';
 
 class ClubExecutiveDashboardScreen extends StatefulWidget {
   final String? token;
@@ -364,70 +365,6 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
               ),
             ),
 
-            // Manage Membership Status card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ClubExecutiveClubManagementScreen(
-                        token: widget.token,
-                        clubId: _clubId,
-                      ),
-                    ),
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF137FEC).withOpacity(0.5)),
-                    color: const Color(0xFF137FEC).withOpacity(0.1),
-                  ),
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF137FEC),
-                        ),
-                        child: Icon(Icons.how_to_reg, color: Colors.white, size: 24),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Manage Membership Status',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF137FEC),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Review pending, active, and expired members.',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[400],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.arrow_forward_ios, color: const Color(0xFF137FEC), size: 20),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
             // Upcoming Events section
             _buildSection(
               title: 'Upcoming Events',
@@ -649,7 +586,7 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => FinanceTransactionsScreen(
+                                builder: (_) => FinancialOverviewScreen(
                                   token: widget.token,
                                   clubId: _clubId,
                                 ),
@@ -719,7 +656,7 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => FinanceTransactionsScreen(
+                    builder: (_) => FinancialOverviewScreen(
                       token: widget.token,
                       clubId: _clubId,
                     ),

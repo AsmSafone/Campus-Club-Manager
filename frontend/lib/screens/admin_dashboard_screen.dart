@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/club_executive_club_management_screen.dart';
+import 'package:frontend/screens/club_management_for_admins_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -595,16 +597,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.pushNamed(
+                    Navigator.push(
                       context,
-                      '/user-role-assignment',
-                      arguments: {
-                        'clubId': club['club_id'],
-                        'clubName': club['name'],
-                        'token': widget.token,
-                      },
+                      MaterialPageRoute(
+                        builder: (context) => ClubManagementForAdminsScreen(
+                          
+                        ),
+                      ),
                     );
                   },
+                  
                   child: const Text('View'),
                 ),
               ),

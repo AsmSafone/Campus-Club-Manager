@@ -292,11 +292,47 @@ app.get('/api/clubs/:clubId/events', verifyToken, async (req, res) => {
             ORDER BY date DESC
             LIMIT 10
         `, [clubId]);
-        
         res.json(events);
     } catch (err) {
         console.error('Get events error:', err);
         res.status(500).json({ error: 'Failed to fetch events' });
+    }
+});
+
+// Get events for all clubs the current user is a member of
+app.get('/api/users/me/events', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const userId = req.user?.userId || req.user?.user_id || null;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        const [events] = await pool.query(`
+            SELECT 
+                e.event_id,
+                e.title,
+                e.description,
+                e.date,
+                e.venue,
+                e.club_id,
+                c.name as club_name,
+                (SELECT COUNT(*) FROM Registration r WHERE r.event_id = e.event_id) as attendees,
+                (SELECT COUNT(*) FROM Registration r WHERE r.event_id = e.event_id AND r.user_id = ?) as is_registered
+            FROM Event e
+            JOIN Club c ON e.club_id = c.club_id
+            WHERE e.club_id IN (SELECT club_id FROM Membership WHERE user_id = ?)
+            ORDER BY e.date DESC
+        `, [userId, userId]);
+
+        // normalize is_registered to boolean
+        const mapped = events.map(ev => ({
+            ...ev,
+            is_registered: (ev.is_registered && ev.is_registered > 0) ? true : false
+        }));
+
+        res.json(mapped);
+    } catch (err) {
+        console.error('Get my events error:', err);
+        res.status(500).json({ error: 'Failed to fetch user events' });
     }
 });
 
@@ -783,4 +819,138 @@ poolPromise.then(() => {
 }).catch(err => {
     console.error('Failed to start server:', err);
     process.exit(1);
+});
+
+// Check if current user is registered for an event
+app.get('/api/clubs/:clubId/events/:eventId/registration', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { eventId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
+
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        const [existing] = await pool.query('SELECT reg_id FROM Registration WHERE event_id = ? AND user_id = ?', [eventId, userId]);
+        res.json({ registered: existing.length > 0 });
+    } catch (err) {
+        console.error('Check registration error:', err);
+        res.status(500).json({ error: 'Failed to check registration' });
+    }
+});
+
+// Register current user to an event (club-scoped)
+app.post('/api/clubs/:clubId/events/:eventId/register', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { clubId, eventId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
+
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        // Ensure event exists and belongs to club
+        const [events] = await pool.query('SELECT event_id FROM Event WHERE event_id = ? AND club_id = ?', [eventId, clubId]);
+        if (events.length === 0) return res.status(404).json({ message: 'Event not found' });
+
+        // Check existing registration
+        const [existing] = await pool.query('SELECT reg_id FROM Registration WHERE event_id = ? AND user_id = ?', [eventId, userId]);
+        if (existing.length > 0) return res.status(400).json({ message: 'Already registered' });
+
+        // Insert registration
+        const [result] = await pool.query('INSERT INTO Registration (event_id, user_id, status) VALUES (?, ?, ?)', [eventId, userId, 'Registered']);
+        res.status(201).json({ message: 'Registered successfully', reg_id: result.insertId });
+    } catch (err) {
+        console.error('Register error:', err);
+        res.status(500).json({ error: 'Failed to register for event' });
+    }
+});
+
+// Register current user to an event (global endpoint fallback)
+app.post('/api/events/:eventId/register', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { eventId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
+
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        // Ensure event exists
+        const [events] = await pool.query('SELECT event_id FROM Event WHERE event_id = ?', [eventId]);
+        if (events.length === 0) return res.status(404).json({ message: 'Event not found' });
+
+        // Check existing registration
+        const [existing] = await pool.query('SELECT reg_id FROM Registration WHERE event_id = ? AND user_id = ?', [eventId, userId]);
+        if (existing.length > 0) return res.status(400).json({ message: 'Already registered' });
+
+        // Insert registration
+        const [result] = await pool.query('INSERT INTO Registration (event_id, user_id, status) VALUES (?, ?, ?)', [eventId, userId, 'Registered']);
+        res.status(201).json({ message: 'Registered successfully', reg_id: result.insertId });
+    } catch (err) {
+        console.error('Register error:', err);
+        res.status(500).json({ error: 'Failed to register for event' });
+    }
+});
+
+// Get membership status for the current user in a club
+app.get('/api/clubs/:clubId/membership', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { clubId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
+
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        const [rows] = await pool.query('SELECT membership_id, role FROM Membership WHERE club_id = ? AND user_id = ?', [clubId, userId]);
+        if (rows.length === 0) return res.json({ member: false });
+
+        return res.json({ member: true, membership_id: rows[0].membership_id, role: rows[0].role });
+    } catch (err) {
+        console.error('Get membership error:', err);
+        res.status(500).json({ error: 'Failed to check membership' });
+    }
+});
+
+// Current user joins a club
+app.post('/api/clubs/:clubId/join', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { clubId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
+
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        // Ensure club exists
+        const [clubExists] = await pool.query('SELECT club_id FROM Club WHERE club_id = ?', [clubId]);
+        if (clubExists.length === 0) return res.status(404).json({ message: 'Club not found' });
+
+        // Check existing membership
+        const [existing] = await pool.query('SELECT membership_id FROM Membership WHERE club_id = ? AND user_id = ?', [clubId, userId]);
+        if (existing.length > 0) return res.status(400).json({ message: 'Already a member' });
+
+        const [result] = await pool.query('INSERT INTO Membership (user_id, club_id, role, join_date) VALUES (?, ?, ?, ?)', [userId, clubId, 'Member', new Date().toISOString().split('T')[0]]);
+        res.status(201).json({ message: 'Joined club successfully', membership_id: result.insertId });
+    } catch (err) {
+        console.error('Join club error:', err);
+        res.status(500).json({ error: 'Failed to join club' });
+    }
+});
+
+// Current user leaves a club
+app.post('/api/clubs/:clubId/leave', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { clubId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
+
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        // Find membership
+        const [membership] = await pool.query('SELECT membership_id FROM Membership WHERE club_id = ? AND user_id = ?', [clubId, userId]);
+        if (membership.length === 0) return res.status(400).json({ message: 'Not a member' });
+
+        await pool.query('DELETE FROM Membership WHERE membership_id = ?', [membership[0].membership_id]);
+        res.json({ message: 'Left club successfully' });
+    } catch (err) {
+        console.error('Leave club error:', err);
+        res.status(500).json({ error: 'Failed to leave club' });
+    }
 });

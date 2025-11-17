@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/member/club_details_screen.dart';
+import 'package:frontend/screens/member/club_list_screen.dart';
+import 'package:frontend/screens/member/my_event_list.dart';
+import 'package:frontend/screens/notification_view_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:frontend/screens/club_events_screen.dart';
+import 'package:frontend/screens/membership_status_management_screen.dart';
+import 'package:frontend/screens/user_profile_management_screen.dart';
 
 class MemberDashboardScreen extends StatefulWidget {
   final String? token;
@@ -13,12 +22,23 @@ class Event {
   final String title;
   final String date;
   final String status;
+  final int? attendees;
 
   Event({
     required this.title,
     required this.date,
     required this.status,
+    this.attendees,
   });
+
+  factory Event.fromMap(Map<String, dynamic> m) {
+    return Event(
+      title: (m['title'] ?? m['name'] ?? '').toString(),
+      date: (m['date'] ?? '').toString(),
+      status: ((m['status'] ?? 'RSVP').toString()),
+      attendees: m['attendees'] is num ? (m['attendees'] as num).toInt() : null,
+    );
+  }
 }
 
 class Announcement {
@@ -31,29 +51,101 @@ class Announcement {
     required this.description,
     required this.date,
   });
+
+  factory Announcement.fromMap(Map<String, dynamic> m) {
+    return Announcement(
+      title: (m['title'] ?? '').toString(),
+      description: (m['description'] ?? '').toString(),
+      date: (m['timestamp'] ?? m['date'] ?? '').toString(),
+    );
+  }
 }
 
 class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
   int _selectedNavIndex = 0;
+  // dynamic state
+  List<Event> events = [];
+  List<Announcement> announcements = [];
+  int _unreadNotifications = 0;
+  bool _loading = false;
+  String _userName = 'Member';
+  String? _userEmail;
+  int? _clubId;
+  List<Map<String, dynamic>> _notifications = [];
+  final String _apiBaseUrl = 'http://10.0.2.2:3000';
 
-  final List<Event> events = [
-    Event(title: 'Annual Tech Conference', date: 'Dec 15, 6:00 PM', status: 'CONFIRMED'),
-    Event(title: 'Intro to Python Workshop', date: 'Dec 18, 7:00 PM', status: 'RSVP'),
-    Event(title: 'Guest Speaker: Jane Doe', date: 'Dec 22, 5:00 PM', status: 'RSVP'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // initialize from passed user if available
+    if (widget.user != null) {
+      _userName = widget.user!['name']?.toString() ?? _userName;
+      _userEmail = widget.user!['email']?.toString();
+      if (widget.user!['clubId'] != null) {
+        _clubId = widget.user!['clubId'] is int ? widget.user!['clubId'] as int : int.tryParse('${widget.user!['clubId']}');
+      }
+    }
+    _loadDashboard();
+  }
 
-  final List<Announcement> announcements = [
-    Announcement(
-      title: 'Volunteer Call for Annual Charity Drive',
-      description: 'We\'re looking for volunteers to help us make this year\'s charity drive a success...',
-      date: 'Posted on Nov 28',
-    ),
-    Announcement(
-      title: 'October Meeting Minutes',
-      description: 'Thanks to everyone who attended! The minutes from our last meeting are now available...',
-      date: 'Posted on Nov 15',
-    ),
-  ];
+  Future<void> _loadDashboard() async {
+    setState(() => _loading = true);
+    try {
+      await Future.wait([_fetchNotifications(), _fetchEvents()]);
+    } catch (_) {}
+    setState(() => _loading = false);
+  }
+
+  Future<void> _fetchNotifications() async {
+    if (widget.token == null) return;
+    try {
+      final uri = Uri.parse('$_apiBaseUrl/api/notifications');
+      final resp = await http.get(uri, headers: {'Authorization': 'Bearer ${widget.token}'});
+      if (resp.statusCode == 200) {
+        final List<dynamic> list = json.decode(resp.body) as List<dynamic>;
+        final items = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        setState(() {
+          _notifications = items;
+          _unreadNotifications = items.where((n) => n['isRead'] == false).length;
+          announcements = items.where((n) => (n['type'] ?? '') == 'announcement').map((n) => Announcement.fromMap(n)).toList();
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _fetchEvents() async {
+    if (_clubId == null || widget.token == null) return;
+    try {
+      final uri = Uri.parse('$_apiBaseUrl/api/clubs/me/events');
+      final resp = await http.get(uri, headers: {'Authorization': 'Bearer ${widget.token}'});
+      if (resp.statusCode == 200) {
+        final List<dynamic> list = json.decode(resp.body) as List<dynamic>;
+        setState(() {
+          final now = DateTime.now();
+          final all = list.map((e) => Event.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+
+          // Keep only events with a parseable date that is today or in the future, and sort by date ascending.
+          events = all.where((ev) {
+            DateTime? dt = DateTime.tryParse(ev.date);
+            if (dt == null) {
+              final ms = int.tryParse(ev.date);
+              if (ms != null) dt = DateTime.fromMillisecondsSinceEpoch(ms);
+            }
+            return dt != null && (dt.isAfter(now) || dt.isAtSameMomentAs(now));
+          }).toList()
+            ..sort((a, b) {
+              DateTime? da = DateTime.tryParse(a.date) ?? (int.tryParse(a.date) != null ? DateTime.fromMillisecondsSinceEpoch(int.parse(a.date)) : null);
+              DateTime? db = DateTime.tryParse(b.date) ?? (int.tryParse(b.date) != null ? DateTime.fromMillisecondsSinceEpoch(int.parse(b.date)) : null);
+              if (da == null && db == null) return 0;
+              if (da == null) return 1;
+              if (db == null) return -1;
+              return da.compareTo(db);
+            });
+        });
+        
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +156,10 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
         elevation: 0,
         toolbarHeight: 0,
       ),
-      body: SingleChildScrollView(
+      body: RefreshIndicator(
+        color: const Color(0xFF137FEC),
+        onRefresh: _loadDashboard,
+        child: SingleChildScrollView(
         child: Column(
           children: [
             Padding(
@@ -73,7 +168,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Hi, Alex!',
+                    'Hi, $_userName',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -82,9 +177,30 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                   ),
                   Row(
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.notifications, color: Colors.white),
-                        onPressed: () {},
+                      // notifications with badge
+                      Stack(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.notifications, color: Colors.white),
+                            onPressed: () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => NotificationViewScreen(
+                                  token: widget.token,
+                                ),
+                              ));
+                            },
+                          ),
+                          if (_unreadNotifications > 0)
+                            Positioned(
+                              right: 6,
+                              top: 6,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                child: Text('$_unreadNotifications', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                              ),
+                            ),
+                        ],
                       ),
                       IconButton(
                         icon: const Icon(Icons.logout, color: Colors.white),
@@ -95,11 +211,6 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                           );
                         },
                         tooltip: 'Logout',
-                      ),
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.grey[800],
-                        child: Icon(Icons.person, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -197,97 +308,51 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
               ),
             ),
             SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                'My Status',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Color(0xFF192734),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[800]!),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Membership', style: TextStyle(color: Colors.grey[400])),
-                        Text('Active', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    Divider(color: Colors.grey[800]),
-                    SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Dues', style: TextStyle(color: Colors.grey[400])),
-                        Text('Unpaid', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Manage Membership')),
-                        ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Color(0xFF4A90E2).withOpacity(0.2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                        ),
-                        child: Text(
-                          'Manage Membership',
-                          style: TextStyle(color: Color(0xFF4A90E2), fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                'Recent Announcements',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: announcements.map((announcement) => _buildAnnouncementCard(announcement)).toList(),
-              ),
-            ),
-            SizedBox(height: 100),
+            
           ],
         ),
+      ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFF192734),
         selectedItemColor: Color(0xFF4A90E2),
         unselectedItemColor: Colors.grey[600],
         currentIndex: _selectedNavIndex,
-        onTap: (index) => setState(() => _selectedNavIndex = index),
+        onTap: (index) async {
+          // Home: keep on this screen
+          if (index == 0) {
+            setState(() => _selectedNavIndex = 0);
+            return;
+          }
+          print(index);
+          // Events: open ClubEventsScreen (requires clubId and token)
+          if (index == 1) {
+            await Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => MyEventList(token: widget.token, clubId: _clubId),
+            ));
+            return;
+          }
+
+          // Members: open membership management
+          if (index == 2) {
+            await Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => ClubListScreen(token: widget.token, clubId: _clubId),
+            ));
+            return;
+          }
+
+          // Profile: open user profile management
+          if (index == 3) {
+            await Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => UserProfileManagementScreen(),
+            ));
+            return;
+          }
+        },
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Members'),
+          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Clubs'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
@@ -361,27 +426,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                   ),
                 ),
                 SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(event.status == 'CONFIRMED' ? 'View Details' : 'RSVP')),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: event.status == 'CONFIRMED' ? Color(0xFF4A90E2) : Color(0xFF4A90E2).withOpacity(0.2),
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    ),
-                    child: Text(
-                      event.status == 'CONFIRMED' ? 'View Details' : 'RSVP',
-                      style: TextStyle(
-                        color: event.status == 'CONFIRMED' ? Colors.white : Color(0xFF4A90E2),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
+                
               ],
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/member/event_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -122,99 +123,127 @@ class _ClubEventsScreenState extends State<ClubEventsScreen> {
               ][eventDate.month - 1];
               String day = eventDate.day.toString().padLeft(2, '0');
 
-              return Column(
+                return Column(
                 children: [
-                  Container(
+                  InkWell(
+                  onTap: () {
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => 
+                      EventDetailsScreen(event: event, token: widget.token),
+                    ),
+                    );
+                  },
+                  child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[800]!),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[800]!),
                     ),
                     child: Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            color: const Color(0xFF137FEC).withOpacity(0.2),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                month,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF137FEC),
-                                ),
+                    children: [
+                      Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        color: const Color(0xFF137FEC).withOpacity(0.2),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if ((event['isRegistered'] ?? event['registered'] ?? event['attending'] ?? event['is_registered']) == true) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              margin: const EdgeInsets.only(bottom: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF137FEC),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              Text(
-                                day,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFF137FEC),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                event['title'] ?? 'Untitled Event',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                event['venue'] ?? 'No venue',
+                              child: const Text(
+                                'REGISTERED',
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[400],
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                              if (event['description'] != null &&
-                                  event['description'].isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  event['description'] ?? '',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey[500],
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ],
+                            ),
+                          ] else const SizedBox(height: 6),
+                        Text(
+                          month,
+                          style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF137FEC),
                           ),
                         ),
                         Text(
-                          '${event['attendees'] ?? 0} attendees',
+                          day,
+                          style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF137FEC),
+                          ),
+                        ),
+                        ],
+                      ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                        Text(
+                          event['title'] ?? 'Untitled Event',
+                          style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 15,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          event['venue'] ?? 'No venue',
+                          style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[400],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (event['description'] != null && event['description'].toString().isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                          event['description'] ?? '',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey[500],
                           ),
-                        ),
-                      ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        ],
+                      ),
+                      ),
+                      Text(
+                      '${event['attendees'] ?? 0} attendees',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[500],
+                      ),
+                      ),
+                    ],
                     ),
+                  ),
                   ),
                   if (index < events.length - 1) const SizedBox(height: 12),
                 ],
-              );
+                );
             },
           );
         },

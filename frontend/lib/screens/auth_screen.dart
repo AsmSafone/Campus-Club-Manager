@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/executive/club_executive_dashboard_screen.dart';
+import 'package:frontend/screens/member/member_dashboard_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -119,13 +121,14 @@ class _AuthScreenState extends State<AuthScreen> {
             },
           );
         } else if (userRole == 'Executive') {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/executive-dashboard',
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => ClubExecutiveDashboardScreen(
+          token: token,
+          user: userData,
+              ),
+            ),
             (route) => false,
-            arguments: {
-              'token': token,
-              'user': userData,
-            },
           );
         } else {
           // Member or Guest

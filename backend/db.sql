@@ -1,5 +1,3 @@
-START TRANSACTION;
-
 CREATE DATABASE IF NOT EXISTS campus_club_management_db;
 USE campus_club_management_db;
 
@@ -8,7 +6,7 @@ CREATE TABLE IF NOT EXISTS User (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('Admin', 'Executive', 'Member', 'Guest') NOT NULL
+    role ENUM('Admin', 'Executive', 'Member') NOT NULL DEFAULT 'Member',
 );
 
 CREATE TABLE IF NOT EXISTS Club (
@@ -63,7 +61,7 @@ CREATE TABLE IF NOT EXISTS Finance (
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- insert ignore into User (name, email, password, role) values ('Administration', 'admin@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Admin'),('Executive User', 'executive@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Executive'),('Member User', 'member@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Member'),('Guest User', 'guest@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Guest'), ('asdf asdf', 'asdf@asdf.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Guest');
+-- insert ignore into User (name, email, password, role) values ('Administration', 'admin@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Admin'),('Executive User', 'executive@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Executive'),('Member User', 'member@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Member');
 
 -- insert ignore into Club (name, description, founded_date) values ('Science Club', 'A club for science enthusiasts.', '2020-01-15'), ('Art Club', 'A club for art lovers.', '2019-05-20'), ('Programming Club', 'A club for coding enthusiasts.', '2021-09-10'), ('Cultural Club', 'A club to celebrate diverse cultures.', '2018-11-05');
 
@@ -74,5 +72,3 @@ CREATE TABLE IF NOT EXISTS Finance (
 -- insert ignore into Registration (event_id, user_id, status) values (1, 3, 'Registered'), (2, 4, 'Attended'), (3, 5, 'Registered');
 
 -- insert ignore into Finance (club_id, type, amount, date, description) values (1, 'Income', 500.00, '2022-02-01', 'Membership Fees'), (1, 'Expense', 200.00, '2022-02-15', 'Event Supplies'), (2, 'Income', 300.00, '2022-03-01', 'Sponsorship'), (3, 'Expense', 150.00, '2022-03-20', 'Venue Booking');
-
-COMMIT;
