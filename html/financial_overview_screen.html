@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Club Treasury Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative w-full max-w-2xl mx-auto flex flex-col">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-10 flex items-center p-4 justify-between bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-zinc-800 dark:text-white">menu</span>
+</div>
+<h1 class="text-zinc-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Club Treasury</h1>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 w-10 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</header>
+<main class="flex flex-col gap-6 p-4">
+<!-- Stats -->
+<section class="flex flex-col gap-4">
+<div class="flex flex-col gap-2 rounded-xl p-6 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50">
+<p class="text-zinc-600 dark:text-zinc-400 text-base font-medium leading-normal">Current Balance</p>
+<p class="text-zinc-900 dark:text-white tracking-tight text-4xl font-bold leading-tight">$1,250.75</p>
+</div>
+<div class="flex gap-4">
+<div class="flex min-w-0 flex-1 flex-col gap-2 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50">
+<p class="text-zinc-600 dark:text-zinc-400 text-sm font-medium leading-normal">Income</p>
+<p class="text-green-500 tracking-tight text-xl font-bold leading-tight">$800.00</p>
+</div>
+<div class="flex min-w-0 flex-1 flex-col gap-2 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50">
+<p class="text-zinc-600 dark:text-zinc-400 text-sm font-medium leading-normal">Expenses</p>
+<p class="text-red-500 tracking-tight text-xl font-bold leading-tight">$350.50</p>
+</div>
+</div>
+</section>
+<!-- Chart Section -->
+<section class="flex flex-col gap-4 rounded-xl p-6 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50">
+<div class="flex justify-between items-center">
+<p class="text-zinc-900 dark:text-white text-lg font-bold leading-normal">Cashflow</p>
+<div class="flex gap-2">
+<button class="flex h-8 items-center justify-center rounded-lg bg-primary text-white px-3 text-sm font-medium">Month</button>
+<button class="flex h-8 items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300 px-3 text-sm font-medium">Year</button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<p class="text-zinc-600 dark:text-zinc-400 text-sm font-normal leading-normal">Net Profit</p>
+<div class="flex items-baseline gap-2">
+<p class="text-zinc-900 dark:text-white tracking-tight text-3xl font-bold leading-tight">$449.50</p>
+<p class="text-green-500 text-base font-medium leading-normal">+7.1%</p>
+</div>
+</div>
+<div class="grid min-h-[160px] grid-flow-col gap-4 grid-rows-[1fr_auto] items-end justify-items-center">
+<div class="flex flex-col gap-1 w-full h-full justify-end items-center">
+<div class="bg-primary/20 w-full rounded-t-md" style="height: 80%;"></div>
+<div class="bg-red-500/30 w-full rounded-t-md" style="height: 40%;"></div>
+</div>
+<p class="text-zinc-500 dark:text-zinc-400 text-xs font-medium leading-normal">Week 1</p>
+<div class="flex flex-col gap-1 w-full h-full justify-end items-center">
+<div class="bg-primary/20 w-full rounded-t-md" style="height: 40%;"></div>
+<div class="bg-red-500/30 w-full rounded-t-md" style="height: 20%;"></div>
+</div>
+<p class="text-zinc-500 dark:text-zinc-400 text-xs font-medium leading-normal">Week 2</p>
+<div class="flex flex-col gap-1 w-full h-full justify-end items-center">
+<div class="bg-primary/20 w-full rounded-t-md" style="height: 80%;"></div>
+<div class="bg-red-500/30 w-full rounded-t-md" style="height: 60%;"></div>
+</div>
+<p class="text-zinc-500 dark:text-zinc-400 text-xs font-medium leading-normal">Week 3</p>
+<div class="flex flex-col gap-1 w-full h-full justify-end items-center">
+<div class="bg-primary/20 w-full rounded-t-md" style="height: 30%;"></div>
+<div class="bg-red-500/30 w-full rounded-t-md" style="height: 35%;"></div>
+</div>
+<p class="text-zinc-500 dark:text-zinc-400 text-xs font-medium leading-normal">Week 4</p>
+</div>
+</section>
+<!-- Button Group -->
+<section class="grid grid-cols-3 gap-3">
+<button class="flex flex-col items-center justify-center gap-2 rounded-xl p-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-sm font-semibold h-24">
+<span class="material-symbols-outlined text-primary">payments</span>
+<span>Receive</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 rounded-xl p-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-sm font-semibold h-24">
+<span class="material-symbols-outlined text-primary">receipt_long</span>
+<span>Log Expense</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 rounded-xl p-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white text-sm font-semibold h-24">
+<span class="material-symbols-outlined text-primary">assessment</span>
+<span>Report</span>
+</button>
+</section>
+<!-- Transaction List -->
+<section class="flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h2 class="text-zinc-900 dark:text-white text-lg font-bold leading-normal">Recent Transactions</h2>
+<button class="text-primary text-sm font-semibold">View All</button>
+</div>
+<ul class="flex flex-col gap-3">
+<li class="flex items-center gap-4 rounded-xl p-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+<div class="flex items-center justify-center size-10 rounded-full bg-primary/20">
+<span class="material-symbols-outlined text-primary">group</span>
+</div>
+<div class="flex-1">
+<p class="text-zinc-900 dark:text-white font-semibold">Membership Dues</p>
+<p class="text-zinc-500 dark:text-zinc-400 text-sm">October 26, 2023</p>
+</div>
+<p class="text-green-500 font-bold">+$50.00</p>
+</li>
+<li class="flex items-center gap-4 rounded-xl p-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+<div class="flex items-center justify-center size-10 rounded-full bg-red-500/20">
+<span class="material-symbols-outlined text-red-500">celebration</span>
+</div>
+<div class="flex-1">
+<p class="text-zinc-900 dark:text-white font-semibold">Pizza for Event</p>
+<p class="text-zinc-500 dark:text-zinc-400 text-sm">October 24, 2023</p>
+</div>
+<p class="text-red-500 font-bold">-$75.50</p>
+</li>
+<li class="flex items-center gap-4 rounded-xl p-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+<div class="flex items-center justify-center size-10 rounded-full bg-primary/20">
+<span class="material-symbols-outlined text-primary">confirmation_number</span>
+</div>
+<div class="flex-1">
+<p class="text-zinc-900 dark:text-white font-semibold">Ticket Sales</p>
+<p class="text-zinc-500 dark:text-zinc-400 text-sm">October 22, 2023</p>
+</div>
+<p class="text-green-500 font-bold">+$120.00</p>
+</li>
+<li class="flex items-center gap-4 rounded-xl p-3 bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800">
+<div class="flex items-center justify-center size-10 rounded-full bg-red-500/20">
+<span class="material-symbols-outlined text-red-500">print</span>
+</div>
+<div class="flex-1">
+<p class="text-zinc-900 dark:text-white font-semibold">Flyer Printing</p>
+<p class="text-zinc-500 dark:text-zinc-400 text-sm">October 20, 2023</p>
+</div>
+<p class="text-red-500 font-bold">-$25.00</p>
+</li>
+</ul>
+</section>
+</main>
+</div>
+</body></html>

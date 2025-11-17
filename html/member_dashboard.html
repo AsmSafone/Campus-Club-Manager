@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Club Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#4A90E2",
+              "background-light": "#F8F9FA",
+              "background-dark": "#101922",
+              "text-light": "#212529",
+              "text-dark": "#F8F9FA",
+              "card-light": "#FFFFFF",
+              "card-dark": "#192430",
+              "border-light": "#E0E0E0",
+              "border-dark": "#3b4754",
+              "text-secondary-light": "#6c757d",
+              "text-secondary-dark": "#9dabb9",
+            },
+            fontFamily: {
+              "display": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.5rem",
+              "lg": "0.75rem",
+              "xl": "1rem",
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden text-text-light dark:text-text-dark">
+<main class="flex-1 pb-24">
+<!-- Top App Bar -->
+<div class="flex flex-col gap-2 p-4 pb-2">
+<div class="flex h-12 items-center justify-between">
+<p class="tracking-light text-[28px] font-bold leading-tight">Hi, Alex!</p>
+<div class="flex size-12 shrink-0 items-center justify-center">
+<img alt="User avatar" class="h-10 w-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4k7vZLnp1Vo5x8tr6m6_msaMB_BSE3EbZtv9ExXLrIlCU8jymfysZSvHJBbY0EibejSlacIEmARk9VtaYPXwaSADxCElbbIr5nfrRuWzNvz142iiz83Aepaj176-02moOMB8he4qv2J9AGt83rleYciyM6JVNLwQIpFihXnUoTE86PK2OA5isM6WkZp3q7UKuQska891w_uY0VwEYIBcNz4yDsbKH_5qYb8IEZVaACvPog4iXrK8C0F3lATpdapfFOcCmofkO3w"/>
+</div>
+</div>
+</div>
+<!-- Action Panel / Announcement -->
+<div class="p-4 @container">
+<div class="relative flex flex-1 flex-col items-start justify-between gap-4 rounded-lg border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark p-5 shadow-sm @[480px]:flex-row @[480px]:items-center">
+<div class="flex flex-col gap-1">
+<p class="text-base font-bold leading-tight">Important Announcement!</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-base font-normal leading-normal">Our next general body meeting has been rescheduled. See the new date and time.</p>
+</div>
+<a class="text-sm font-bold leading-normal tracking-[0.015em] flex gap-2 text-primary whitespace-nowrap" href="#">
+                        Learn More
+                        <span class="material-symbols-outlined text-primary" style="font-size: 20px;">arrow_forward</span>
+</a>
+<button class="absolute top-2 right-2 p-1 text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+</button>
+</div>
+</div>
+<!-- Section Header: Upcoming Events -->
+<h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Upcoming Events</h2>
+<!-- Carousel -->
+<div class="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden pl-4">
+<div class="flex items-stretch gap-4">
+<div class="flex h-full w-72 flex-1 flex-col gap-4 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-sm">
+<div class="relative w-full bg-center bg-no-repeat aspect-video bg-cover rounded-t-lg flex flex-col" data-alt="Abstract gradient of blue and purple for tech conference banner" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDFiFfKWnc3XBsi5cH-ShLNvdgvn9a_fTT0QrLeR6nCgWdQ0lYht7zF1gG3MT943kHdVxmDaMd68LumGv7pmMUJ2sx2h6EwEnGfR-74C971VooRC94JvNwa2dXTaUrPmA2pO1kwPKZVHQkXm3RsW0UG57nX6ic2M5oMROUqvnj8_CrmNnqy9mY29_FVWdDBYtREW0TrVkGf3nGb6l0qJ6Ei5F5fbRost0Yla7K2FxzK2AxVVYgcTKM-iloDCXlpLy-9hAcRwkltSA");'>
+<div class="absolute top-2 right-2 rounded-full bg-green-500/80 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">CONFIRMED</div>
+</div>
+<div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+<div>
+<p class="text-base font-bold leading-normal">Annual Tech Conference</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-normal leading-normal">Dec 15, 6:00 PM</p>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">View Details</span>
+</button>
+</div>
+</div>
+<div class="flex h-full w-72 flex-1 flex-col gap-4 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-sm">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-t-lg flex flex-col" data-alt="Laptop with Python code on the screen for a workshop" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA3q-IC-Ux2xQ34eWSE3di3aA6489HFq9ij-VHgKEA9ZHVjjU0YhuDLy9a_3aJtGqdlTDzr38kyYxzLuHe19e8yyQ6ftArVwoAC8oP_vxdlRSRlm8gQD4xfTFdoof2ScgRMTWrysUXCP7LOSSUKs9WO_l7yCiWMNkbF2vGX9LgOJXOK-HKL5oqttC6yCz1_XhcR_QsIk258BNsUmSkrleRpYoBgOMTYmCPvETezDfnarIZ5R0PzxlhgPeP5i6Eb6wBm6Eze_qbQIw");'></div>
+<div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+<div>
+<p class="text-base font-bold leading-normal">Intro to Python Workshop</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-normal leading-normal">Dec 18, 7:00 PM</p>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/20 text-primary dark:bg-primary/30 text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">RSVP</span>
+</button>
+</div>
+</div>
+<div class="flex h-full w-72 flex-1 flex-col gap-4 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-sm mr-4">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-t-lg flex flex-col" data-alt="Portrait of a professional woman for a guest speaker event" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDNMTgYojfmhdB1iEhPTxFsSCFjFRYP9aF3a1cGO5HqkV2DfP1lBCi_nItOLawnCo_HllVBYCkNuXRuoK3KgQv7NxnPK79_WXXBQXxbec9FapK3MRLQdRkYaXEkelaBfwokByWRJZ7-c5rSMt8W1s68aNwSepuonyHvZ0kYb0Qp7FvH6zv2BBXL4-F8LrmNw4ZlEGZP-CEEy5s7xjhIjs6wdoBI9HCCtSsQ1_gadc96oeXLNMZuTT5WfECBYnlR-QzPEuTzgCJDpQ");'></div>
+<div class="flex flex-col flex-1 justify-between p-4 pt-0 gap-4">
+<div>
+<p class="text-base font-bold leading-normal">Guest Speaker: Jane Doe</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-normal leading-normal">Dec 22, 5:00 PM</p>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/20 text-primary dark:bg-primary/30 text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">RSVP</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Section Header: My Status -->
+<h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">My Status</h2>
+<!-- My Status Card -->
+<div class="px-4">
+<div class="rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-sm p-5">
+<div class="flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<span class="text-text-secondary-light dark:text-text-secondary-dark">Membership</span>
+<span class="font-bold text-green-500">Active</span>
+</div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark"></div>
+<div class="flex justify-between items-center">
+<span class="text-text-secondary-light dark:text-text-secondary-dark">Dues</span>
+<span class="font-bold text-orange-500">Unpaid</span>
+</div>
+</div>
+<a class="mt-5 block w-full text-center rounded-lg bg-primary/20 dark:bg-primary/30 text-primary px-4 py-2.5 text-sm font-bold" href="#">Manage Membership</a>
+</div>
+</div>
+<!-- Section Header: Recent Announcements -->
+<h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Recent Announcements</h2>
+<!-- Recent Announcements List -->
+<div class="px-4 flex flex-col gap-3">
+<div class="flex flex-col gap-1 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-sm p-4">
+<p class="font-bold">Volunteer Call for Annual Charity Drive</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">We're looking for volunteers to help us make this year's charity drive a success...</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark pt-2">Posted on Nov 28</p>
+</div>
+<div class="flex flex-col gap-1 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-sm p-4">
+<p class="font-bold">October Meeting Minutes</p>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">Thanks to everyone who attended! The minutes from our last meeting are now available...</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark pt-2">Posted on Nov 15</p>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 h-20 bg-card-light/80 dark:bg-card-dark/80 backdrop-blur-lg border-t border-border-light dark:border-border-dark flex justify-around items-center">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined !fill-1">home</span>
+<span class="text-xs font-bold">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark" href="#">
+<span class="material-symbols-outlined">event</span>
+<span class="text-xs font-bold">Events</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-xs font-bold">Members</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-xs font-bold">Profile</span>
+</a>
+</nav>
+</div>
+</body></html>

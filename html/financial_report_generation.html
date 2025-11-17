@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Financial Reports</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#137fec",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101922",
+            "success": "#4CAF50",
+            "danger": "#D0021B",
+            "text-light-primary": "#1C1C1E",
+            "text-light-secondary": "#8E8E93",
+            "text-dark-primary": "#f0f2f4",
+            "text-dark-secondary": "#9dabb9",
+            "card-light": "#ffffff",
+            "card-dark": "#1c2127",
+            "border-light": "#e5e7eb",
+            "border-dark": "#3b4754",
+          },
+          fontFamily: {
+            "display": ["Manrope", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+<!-- Top App Bar -->
+<div class="flex shrink-0 items-center bg-card-light dark:bg-card-dark p-4 pb-3 justify-between border-b border-border-light dark:border-border-dark">
+<div class="flex size-10 items-center justify-center text-text-light-primary dark:text-text-dark-primary">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</div>
+<h1 class="text-text-light-primary dark:text-text-dark-primary text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Financial Reports</h1>
+<div class="w-10"></div> <!-- Spacer -->
+</div>
+<main class="flex-1 p-4">
+<!-- Parameter Selection Card -->
+<div class="bg-card-light dark:bg-card-dark rounded-xl p-4 md:p-6 shadow-sm">
+<h2 class="text-text-light-primary dark:text-text-dark-primary text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Configure Report</h2>
+<!-- Select Club -->
+<div class="mb-4">
+<label class="flex flex-col w-full">
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-base font-medium leading-normal pb-2">Select Club</p>
+<select class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-light-primary dark:text-text-dark-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:border-primary h-14 placeholder:text-text-light-secondary placeholder:dark:text-text-dark-secondary p-[15px] text-base font-normal leading-normal appearance-none bg-no-repeat bg-right" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDbmlWrQaywW2n3FdixhZjnMPvQL3GZY1R1N31fUVlFiBqPS1neMk19ZyeY254HhhiogME9HDMS24QjY7XN9-7YrxJv89NxakvqjvoHuA_RrEgqurUp1yp6GwXiSkjZrWShKXF_2VswUiuztWLN7u14KD4lgClflYVQskNFvE-L7uNKXk9udKrh1St2wxmbqFUn13qid62JB0PtaBvGCqWGNZtaQtw1gYv4MRDR_5GzMIbDIwZAC-wper8RTBxA_GGlpqMPrP88AQ');">
+<option>Knitting Club</option>
+<option>Debate Society</option>
+<option>Robotics Team</option>
+</select>
+</label>
+</div>
+<!-- Segmented Buttons: Report Type -->
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-base font-medium leading-normal pb-2">Report Type</p>
+<div class="flex">
+<div class="flex h-10 flex-1 items-center justify-center rounded-lg bg-background-light dark:bg-background-dark p-1 border border-border-light dark:border-border-dark">
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-primary has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-white text-text-light-secondary dark:text-text-dark-secondary text-sm font-medium leading-normal transition-colors duration-200">
+<span class="truncate">Monthly</span>
+<input class="invisible w-0" name="report_type" type="radio" value="Monthly"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-primary has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-white text-text-light-secondary dark:text-text-dark-secondary text-sm font-medium leading-normal transition-colors duration-200">
+<span class="truncate">Annual</span>
+<input class="invisible w-0" name="report_type" type="radio" value="Annual"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-primary has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-white text-text-light-secondary dark:text-text-dark-secondary text-sm font-medium leading-normal transition-colors duration-200">
+<span class="truncate">Custom</span>
+<input checked="" class="invisible w-0" name="report_type" type="radio" value="Custom Range"/>
+</label>
+</div>
+</div>
+<!-- Date Pickers -->
+<div class="flex max-w-[480px] flex-wrap items-end gap-4 mt-4">
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-base font-medium leading-normal pb-2">Start Date</p>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-light-primary dark:text-text-dark-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:border-primary h-14 placeholder:text-text-light-secondary placeholder:dark:text-text-dark-secondary p-[15px] text-base font-normal leading-normal" placeholder="DD/MM/YYYY" type="date" value=""/>
+</label>
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-base font-medium leading-normal pb-2">End Date</p>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-light-primary dark:text-text-dark-primary focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:border-primary h-14 placeholder:text-text-light-secondary placeholder:dark:text-text-dark-secondary p-[15px] text-base font-normal leading-normal" placeholder="DD/MM/YYYY" type="date" value=""/>
+</label>
+</div>
+<!-- Filter by -->
+<div class="mt-5">
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-base font-medium leading-normal pb-2">Filter by</p>
+<div class="flex items-center gap-3">
+<label class="flex cursor-pointer items-center gap-2 rounded-full border border-border-light dark:border-border-dark px-4 py-2 has-[:checked]:bg-primary/20 has-[:checked]:border-primary has-[:checked]:text-primary text-text-light-secondary dark:text-text-dark-secondary text-sm font-medium transition-colors duration-200">
+<input checked="" class="form-checkbox rounded text-primary focus:ring-primary/50 h-4 w-4 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700" type="checkbox"/>
+<span>Income</span>
+</label>
+<label class="flex cursor-pointer items-center gap-2 rounded-full border border-border-light dark:border-border-dark px-4 py-2 has-[:checked]:bg-primary/20 has-[:checked]:border-primary has-[:checked]:text-primary text-text-light-secondary dark:text-text-dark-secondary text-sm font-medium transition-colors duration-200">
+<input checked="" class="form-checkbox rounded text-primary focus:ring-primary/50 h-4 w-4 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700" type="checkbox"/>
+<span>Expense</span>
+</label>
+</div>
+</div>
+</div>
+<!-- CTA Button -->
+<button class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-base font-bold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark mt-6">
+<span class="material-symbols-outlined">summarize</span>
+        Generate Report
+      </button>
+<!-- Report Display Area -->
+<div class="mt-8">
+<h2 class="text-text-light-primary dark:text-text-dark-primary text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Report Summary</h2>
+<div class="rounded-xl bg-card-light dark:bg-card-dark shadow-sm p-4 md:p-6 min-h-[200px] flex flex-col justify-center items-center text-center">
+<!-- Empty State -->
+<div class="flex flex-col items-center justify-center py-10">
+<span class="material-symbols-outlined text-5xl text-text-light-secondary dark:text-text-dark-secondary mb-3">ballot</span>
+<p class="text-text-light-primary dark:text-text-dark-primary font-semibold">Ready to Generate</p>
+<p class="text-text-light-secondary dark:text-text-dark-secondary text-sm mt-1 max-w-xs">Configure your report options above and tap 'Generate' to see the results.</p>
+</div>
+<!-- Loading State -->
+<!-- 
+            <div class="flex flex-col items-center justify-center py-10 animate-pulse">
+                <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-4"></div>
+                <div class="h-3 w-48 bg-gray-200 dark:bg-gray-700 rounded mt-2"></div>
+            </div>
+            -->
+</div>
+</div>
+</main>
+</div>
+</body></html>

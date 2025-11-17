@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manage Clubs</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex min-h-screen w-full flex-col">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-10 flex h-16 w-full items-center justify-between border-b border-white/10 bg-background-light px-4 dark:bg-background-dark">
+<button class="flex h-10 w-10 items-center justify-center text-slate-800 dark:text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="text-xl font-bold text-slate-900 dark:text-white">Manage Clubs</h1>
+<button class="flex h-10 w-10 items-center justify-center text-slate-800 dark:text-white">
+<span class="material-symbols-outlined">search</span>
+</button>
+</header>
+<main class="flex-1 pb-24">
+<!-- Search Bar -->
+<div class="p-4">
+<label class="flex h-12 w-full flex-col">
+<div class="flex h-full w-full flex-1 items-stretch rounded-lg">
+<div class="flex items-center justify-center rounded-l-lg border border-r-0 border-slate-200 bg-white pl-4 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg border border-l-0 border-slate-200 bg-white px-4 text-base font-normal leading-normal text-slate-900 placeholder:text-slate-400 focus:outline-0 focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500" placeholder="Search for a club..." value=""/>
+</div>
+</label>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-3 overflow-x-auto px-4 pb-4">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary/10 px-4 text-primary dark:bg-primary/20">
+<p class="text-sm font-semibold leading-normal">Sort: A-Z</p>
+<span class="material-symbols-outlined !text-base">arrow_drop_down</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full border border-slate-200 bg-white px-4 dark:border-slate-700 dark:bg-slate-800">
+<p class="text-sm font-medium leading-normal text-slate-700 dark:text-slate-300">Category</p>
+<span class="material-symbols-outlined !text-base text-slate-500 dark:text-slate-400">arrow_drop_down</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full border border-slate-200 bg-white px-4 dark:border-slate-700 dark:bg-slate-800">
+<p class="text-sm font-medium leading-normal text-slate-700 dark:text-slate-300">Status</p>
+<span class="material-symbols-outlined !text-base text-slate-500 dark:text-slate-400">arrow_drop_down</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full border border-slate-200 bg-white px-4 dark:border-slate-700 dark:bg-slate-800">
+<p class="text-sm font-medium leading-normal text-slate-700 dark:text-slate-300">Newest</p>
+<span class="material-symbols-outlined !text-base text-slate-500 dark:text-slate-400">arrow_drop_down</span>
+</button>
+</div>
+<!-- Club List -->
+<div class="flex flex-col gap-2 px-4">
+<!-- List Item Card 1 -->
+<div class="flex cursor-pointer items-center gap-4 rounded-xl bg-white p-3 shadow-sm transition-all hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700/50">
+<div class="aspect-square size-14 rounded-lg bg-cover bg-center bg-no-repeat" data-alt="Students studying together in a library." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAmGANd9Ja5aQ4q4LDwuWR0u4EGhP-RaJMDbJfu3QvHLCKZtTvi_l58PKzlSHBendk1v0SrY69rIXeFZbg4Dx5HibDMAQGsFsEqM1NRl9gZFOrmJZC9bngiUmvENt_ei3F3gmlZHLQwQLr9gFvTCIZco6oOT464ny7UaLTGQ1sQpKJAl6Od0z927nq10InWgfFZ0MfnhPVeV1oq9RmpPfOW0zF7ivebv3ZQGc_nmfwJ2m-PBJjDsf5lYoLP2QD4AxNNNdjQrHMiJg");'></div>
+<div class="flex-1">
+<p class="text-base font-semibold leading-normal text-slate-900 dark:text-white">Creative Writing Club</p>
+<p class="text-sm font-normal leading-normal text-slate-500 dark:text-slate-400">Academic</p>
+</div>
+<div class="flex h-8 w-8 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">more_vert</span>
+</div>
+</div>
+<!-- List Item Card 2 -->
+<div class="flex cursor-pointer items-center gap-4 rounded-xl bg-white p-3 shadow-sm transition-all hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700/50">
+<div class="aspect-square size-14 rounded-lg bg-cover bg-center bg-no-repeat" data-alt="Soccer ball on a green grass field." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC2g8l44nyjBsTfz7aRlHcdaDcC-vGHUIYrhJy8913SISVJKySZyusjVPXvurh-MsLq0yj3ULcSwntFN3KAM2dWMIT6-d-cDY9lYz0e3l1QienigooG0mtYJpRJi7yYqyeX-cvP8CRoPZ7Q_AWoGiFlIpTqqUtXQF6YdVh02cYzhlDFHOzioykAY2vPMKQsCWYnzFL-H_Jnjm_5XtT37XGR6PB1IP5DKepFS35p-9q9os1Fiz3_O-le30pRjL9Aw1duO4FwpMDQuw");'></div>
+<div class="flex-1">
+<p class="text-base font-semibold leading-normal text-slate-900 dark:text-white">University Soccer Team</p>
+<p class="text-sm font-normal leading-normal text-slate-500 dark:text-slate-400">Sports</p>
+</div>
+<div class="flex h-8 w-8 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">more_vert</span>
+</div>
+</div>
+<!-- List Item Card 3 -->
+<div class="flex cursor-pointer items-center gap-4 rounded-xl bg-white p-3 shadow-sm transition-all hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700/50">
+<div class="aspect-square size-14 rounded-lg bg-cover bg-center bg-no-repeat" data-alt="A person coding on a laptop." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCXGe-p-PKaStzGKNkMTCxj2p55i9bzD95ah-VuJLfYtsC12UDp8vrfaKGLt_jMpifFGnyNx9a-SxuAlSuZeS0IMrIkItizSxODHFTdrwQ5Ha1gVHwDLmbyID8bPU3Ej2qeixK4zimVsNarihhOi9kBcCfkOT1E4NbCgzpt0TPlmlzNbpT4svR0R9fpc-i6BLN0O-yfm87x1lMFeNn7HtsY6SzbQLHISE9lw3BfL0_syf8Cor3w9yPS_CxYX4XC2DxeTCL8cjO57A");'></div>
+<div class="flex-1">
+<p class="text-base font-semibold leading-normal text-slate-900 dark:text-white">Coding &amp; Tech Society</p>
+<p class="text-sm font-normal leading-normal text-slate-500 dark:text-slate-400">Technology</p>
+</div>
+<div class="flex h-8 w-8 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">more_vert</span>
+</div>
+</div>
+<!-- List Item Card 4 -->
+<div class="flex cursor-pointer items-center gap-4 rounded-xl bg-white p-3 shadow-sm transition-all hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700/50">
+<div class="aspect-square size-14 rounded-lg bg-cover bg-center bg-no-repeat" data-alt="A group of people debating in a formal setting." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDiXDy3A0WAh6DfHElfE7Uv5lD1osbgODiqOjaT24nskV-u2XLL4wVLeZXINd1pITOeM9Opwv360rhnGLIbwpoidwwfZBka4g3pMUt-_5-IQD95_gmdAqRd1HaVnpjAziWKKzXzj26B0ItYVD6j10Xx4FQmT_rwBA4GCoMqP8di6EDAgCANGbco8LAMDKyk072fwlKn9Of-oangpNrqwJx9th9YwfneMaXQN1A-2QrhkrTc6XH8Q5u1dQhxJXBC-SoZu0ulVPqUsw");'></div>
+<div class="flex-1">
+<p class="text-base font-semibold leading-normal text-slate-900 dark:text-white">Debate Club</p>
+<p class="text-sm font-normal leading-normal text-slate-500 dark:text-slate-400">Public Speaking</p>
+</div>
+<div class="flex h-8 w-8 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">more_vert</span>
+</div>
+</div>
+<!-- List Item Card 5 -->
+<div class="flex cursor-pointer items-center gap-4 rounded-xl bg-white p-3 shadow-sm transition-all hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700/50">
+<div class="aspect-square size-14 rounded-lg bg-cover bg-center bg-no-repeat" data-alt="A person taking a photo with a vintage camera." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBe-MqMQuRuHf8zeZn3slq9Sa2YPVq8j4D-YFlHcVwch23LVRfvzUEDpZzN3CDWw9c5Ukr72H9oznB6crG1NBSlOEdt8EkQcfbcsYUAKWnaVHf4xfCPdgYuKdHHhD49ZtU0rzP8hQQCRtNpiC0-QWGPXQdxe6QoRsEaOKdiIfAT_wtsRcpTLqpwhQnj6ODhSLJ1Fd7xHu3p62FQQaiZd2TkIXFcyG3LKIj5kSKFGWaYXWN-knhevUe7Yha8MnH7HyUbOwTIL5BFGQ");'></div>
+<div class="flex-1">
+<p class="text-base font-semibold leading-normal text-slate-900 dark:text-white">Photography Club</p>
+<p class="text-sm font-normal leading-normal text-slate-500 dark:text-slate-400">Arts &amp; Culture</p>
+</div>
+<div class="flex h-8 w-8 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">more_vert</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button (FAB) -->
+<button class="fixed bottom-6 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105 active:scale-95">
+<span class="material-symbols-outlined !text-3xl">add</span>
+</button>
+</div>
+</body></html>
