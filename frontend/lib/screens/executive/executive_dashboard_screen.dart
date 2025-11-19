@@ -7,7 +7,7 @@ import '../club_events_screen.dart';
 import '../finance_transactions_screen.dart';
 import '../club_executive_club_management_screen.dart';
 import '../notification_view_screen.dart';
-import '../broadcast_message_screen.dart';
+import 'broadcast_message_screen.dart';
 
 class ClubExecutiveDashboardScreen extends StatefulWidget {
   final String? token;
@@ -26,7 +26,6 @@ class _ClubExecutiveDashboardScreenState
   final String _apiBaseUrl = 'http://10.0.2.2:3000';
 
   Map<String, dynamic>? _clubDetails;
-  List<Map<String, dynamic>> _events = [];
   Map<String, dynamic>? _financeData;
   bool _isLoading = true;
   String? _errorMessage;
@@ -102,17 +101,15 @@ class _ClubExecutiveDashboardScreenState
         'Content-Type': 'application/json',
       };
 
-      // Fetch club details, events, and finance data in parallel
+      // Fetch club details and finance data in parallel
       final results = await Future.wait([
         _fetchClubDetails(headers),
-        _fetchEvents(headers),
         _fetchFinanceData(headers),
       ]);
 
       setState(() {
-        _clubDetails = results[0] as Map<String, dynamic>;
-        _events = results[1] as List<Map<String, dynamic>>;
-        _financeData = results[2] as Map<String, dynamic>;
+        _clubDetails = results[0];
+        _financeData = results[1];
         _isLoading = false;
       });
     } catch (e) {
@@ -144,33 +141,6 @@ class _ClubExecutiveDashboardScreenState
       };
     } else {
       throw Exception('Failed to load club details: ${response.statusCode}');
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchEvents(
-    Map<String, String> headers,
-  ) async {
-    final response = await http.get(
-      Uri.parse('$_apiBaseUrl/api/clubs/$_clubId/events'),
-      headers: headers,
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return List<Map<String, dynamic>>.from(
-        data.map(
-          (event) => {
-            'event_id': event['event_id'],
-            'title': event['title'],
-            'description': event['description'],
-            'date': event['date'],
-            'venue': event['venue'],
-            'attendees': event['attendees'] ?? 0,
-          },
-        ),
-      );
-    } else {
-      throw Exception('Failed to load events: ${response.statusCode}');
     }
   }
 
@@ -293,25 +263,25 @@ class _ClubExecutiveDashboardScreenState
                             );
                           },
                         ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Text(
-                              '0',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
+                        // Positioned(
+                        //   top: 8,
+                        //   right: 8,
+                        //   child: Container(
+                        //     padding: const EdgeInsets.all(4),
+                        //     decoration: BoxDecoration(
+                        //       color: Colors.red,
+                        //       shape: BoxShape.circle,
+                        //     ),
+                        //     child: const Text(
+                        //       '0',
+                        //       style: TextStyle(
+                        //         color: Colors.white,
+                        //         fontSize: 10,
+                        //         fontWeight: FontWeight.bold,
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                     // Logout button
@@ -397,96 +367,20 @@ class _ClubExecutiveDashboardScreenState
               title: 'Upcoming Events',
               subtitle:
                   'You have $upcomingEvents events in the next month. Manage them here.',
-              children: _events.isEmpty
+              children: (_clubDetails?['upcoming_events'] ?? 0) == 0
                   ? [const Center(child: Text('No upcoming events'))]
                   : [
-                      for (
-                        int i = 0;
-                        i < (_events.length > 2 ? 2 : _events.length);
-                        i++
-                      )
-                        Column(
-                          children: [
-                            _buildEventCardFromData(_events[i]),
-                            if (i <
-                                (_events.length > 2 ? 1 : _events.length - 1))
-                              const SizedBox(height: 12),
-                          ],
+                      Center(
+                        child: Text(
+                          'You have ${_clubDetails?['upcoming_events']} upcoming event(s).',
+                          style: const TextStyle(color: Colors.white),
                         ),
+                      ),
                     ],
               showViewAll: true,
             ),
 
             const SizedBox(height: 16),
-
-            // Member Management section
-            // Container(
-            //   margin: const EdgeInsets.symmetric(horizontal: 16.0),
-            //   decoration: BoxDecoration(
-            //     borderRadius: BorderRadius.circular(12),
-            //     color: const Color(0xFF1E1E1E),
-            //   ),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.stretch,
-            //     children: [
-            //       Container(
-            //         height: 128,
-            //         color: Colors.blue[300],
-            //         child: const Icon(Icons.image, size: 60, color: Colors.white),
-            //       ),
-            //       Padding(
-            //         padding: const EdgeInsets.all(16.0),
-            //         child: Column(
-            //           crossAxisAlignment: CrossAxisAlignment.start,
-            //           children: [
-            //             Text(
-            //               'Member Management',
-            //               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            //                 fontWeight: FontWeight.bold,
-            //                 color: Colors.white,
-            //               ),
-            //             ),
-            //             const SizedBox(height: 12),
-            //             Row(
-            //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //               crossAxisAlignment: CrossAxisAlignment.end,
-            //               children: [
-            //                 Column(
-            //                   crossAxisAlignment: CrossAxisAlignment.start,
-            //                   children: [
-            //                     Text(
-            //                       '4 new pending approvals.',
-            //                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            //                         color: Colors.grey[400],
-            //                       ),
-            //                     ),
-            //                     const SizedBox(height: 4),
-            //                     Text(
-            //                       'Total members: $memberCount',
-            //                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            //                         color: Colors.grey[400],
-            //                       ),
-            //                     ),
-            //                   ],
-            //                 ),
-            //                 ElevatedButton(
-            //                   onPressed: () {},
-            //                   style: ElevatedButton.styleFrom(
-            //                     backgroundColor: const Color(0xFF137FEC),
-            //                     foregroundColor: Colors.white,
-            //                   ),
-            //                   child: const Text('Manage'),
-            //                 ),
-            //               ],
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
-
-            // const SizedBox(height: 16),
 
             // Financial Overview section
             Container(
@@ -708,10 +602,6 @@ class _ClubExecutiveDashboardScreenState
           selectedItemColor: const Color(0xFF137FEC),
           unselectedItemColor: Colors.grey[600],
           items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard),
-              label: 'Dashboard',
-            ),
             BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
             BottomNavigationBarItem(icon: Icon(Icons.groups), label: 'Members'),
             BottomNavigationBarItem(
@@ -719,8 +609,8 @@ class _ClubExecutiveDashboardScreenState
               label: 'Finances',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.notifications),
-              label: '+ Notification',
+              icon: Icon(Icons.send),
+              label: 'Send Notification',
             ),
           ],
         ),

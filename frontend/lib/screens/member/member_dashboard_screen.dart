@@ -127,9 +127,9 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
   }
 
   Future<void> _fetchEvents() async {
-    if (_clubId == null || widget.token == null) return;
+    if (widget.token == null) return;
     try {
-      final uri = Uri.parse('$_apiBaseUrl/api/clubs/me/events');
+      final uri = Uri.parse('$_apiBaseUrl/api/users/me/upcoming-events');
       final resp = await http.get(
         uri,
         headers: {'Authorization': 'Bearer ${widget.token}'},
@@ -137,37 +137,13 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
       if (resp.statusCode == 200) {
         final List<dynamic> list = json.decode(resp.body) as List<dynamic>;
         setState(() {
-          final now = DateTime.now();
-          final all = list
+          // If you want to show only events for the user's club, filter by _clubId
+          final filtered = _clubId != null
+              ? list.where((e) => (e['club_id']?.toString() ?? '') == _clubId.toString()).toList()
+              : list;
+          events = filtered
               .map((e) => Event.fromMap(Map<String, dynamic>.from(e as Map)))
               .toList();
-
-          // Keep only events with a parseable date that is today or in the future, and sort by date ascending.
-          events =
-              all.where((ev) {
-                DateTime? dt = DateTime.tryParse(ev.date);
-                if (dt == null) {
-                  final ms = int.tryParse(ev.date);
-                  if (ms != null) dt = DateTime.fromMillisecondsSinceEpoch(ms);
-                }
-                return dt != null &&
-                    (dt.isAfter(now) || dt.isAtSameMomentAs(now));
-              }).toList()..sort((a, b) {
-                DateTime? da =
-                    DateTime.tryParse(a.date) ??
-                    (int.tryParse(a.date) != null
-                        ? DateTime.fromMillisecondsSinceEpoch(int.parse(a.date))
-                        : null);
-                DateTime? db =
-                    DateTime.tryParse(b.date) ??
-                    (int.tryParse(b.date) != null
-                        ? DateTime.fromMillisecondsSinceEpoch(int.parse(b.date))
-                        : null);
-                if (da == null && db == null) return 0;
-                if (da == null) return 1;
-                if (db == null) return -1;
-                return da.compareTo(db);
-              });
         });
       }
     } catch (_) {}

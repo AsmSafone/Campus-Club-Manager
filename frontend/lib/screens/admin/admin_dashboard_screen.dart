@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/admin/admin_club_details_screen.dart';
-import 'package:frontend/screens/admin/admin_user_role_assignment_screen.dart';
-import 'package:frontend/screens/admin/club_management_for_admins_screen.dart';
+// import 'package:frontend/screens/admin/admin_user_role_assignment_screen.dart';
+// import 'package:frontend/screens/admin/club_management_for_admins_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -635,14 +635,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => AdminClubDetailsScreen(
-                          clubId: club['id'],
-                          // club: club,
-                          token: widget.token,
+                          clubId: club['club_id'],
+                          token: widget.token!, // ensure non-nullable
                         ),
                       ),
                     );
                   },
-
                   child: const Text('View'),
                 ),
               ),

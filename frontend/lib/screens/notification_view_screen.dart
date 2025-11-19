@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'notification_settings_screen.dart';
+import 'package:intl/intl.dart';
 
 class Notification {
   final String id;
@@ -48,7 +49,7 @@ class Notification {
       description: json['description'] ?? '',
       type: json['type'] ?? 'message',
       timestamp: json['timestamp'] ?? '',
-      isRead: json['isRead'] ?? false,
+      isRead: (json['isRead'] == true || json['isRead'] == 1),
       icon: iconData,
     );
   }
@@ -65,6 +66,7 @@ class NotificationViewScreen extends StatefulWidget {
 
 class _NotificationViewScreenState extends State<NotificationViewScreen> {
   late Future<List<Notification>> _notificationsFuture;
+  List<Notification> _notifications = [];
   final String _apiBaseUrl = 'http://10.0.2.2:3000';
 
   @override
@@ -72,6 +74,25 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
     super.initState();
     _notificationsFuture = _fetchNotifications();
   }
+
+  String formatTimestamp(String timestamp) {
+  try {
+    final dateTime = DateTime.parse(timestamp);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final aDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+    if (aDate == today) {
+      // Show only time if today
+      return DateFormat('hh:mm a').format(dateTime);
+    } else {
+      // Show date and time if not today
+      return DateFormat('MMM d, yyyy hh:mm a').format(dateTime);
+    }
+  } catch (e) {
+    return timestamp; // fallback to raw if parsing fails
+  }
+}
 
   Future<List<Notification>> _fetchNotifications() async {
     try {
@@ -101,18 +122,61 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
     }
   }
 
+  Future<void> _refreshNotifications() async {
+    final notifications = await _fetchNotifications();
+    setState(() {
+      _notifications = notifications;
+      _notificationsFuture = Future.value(notifications);
+    });
+  }
+
+  void _markAllAsRead() {
+    setState(() {
+      _notifications = _notifications.map((n) => Notification(
+        id: n.id,
+        title: n.title,
+        description: n.description,
+        type: n.type,
+        timestamp: n.timestamp,
+        isRead: true,
+        icon: n.icon,
+      )).toList();
+      _notificationsFuture = Future.value(_notifications);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('All marked as read')),
+    );
+  }
+
+  void _markAsRead(String id) {
+    setState(() {
+      _notifications = _notifications.map((n) =>
+        n.id == id ? Notification(
+          id: n.id,
+          title: n.title,
+          description: n.description,
+          type: n.type,
+          timestamp: n.timestamp,
+          isRead: true,
+          icon: n.icon,
+        ) : n
+      ).toList();
+      _notificationsFuture = Future.value(_notifications);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF101922),
+      backgroundColor: const Color(0xFF101922),
       appBar: AppBar(
-        backgroundColor: Color(0xFF101922),
+        backgroundColor: const Color(0xFF101922),
         elevation: 0,
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: Icon(Icons.arrow_back, color: Color(0xFF999999)),
+          child: const Icon(Icons.arrow_back, color: Color(0xFF999999)),
         ),
-        title: Text(
+        title: const Text(
           'Notifications',
           style: TextStyle(
             color: Colors.white,
@@ -123,7 +187,7 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.settings, color: Color(0xFF137FEC)),
+            icon: const Icon(Icons.settings, color: Color(0xFF137FEC)),
             onPressed: () {
               Navigator.push(
                 context,
@@ -137,12 +201,8 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Center(
               child: GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('All marked as read')),
-                  );
-                },
-                child: Text(
+                onTap: _markAllAsRead,
+                child: const Text(
                   'Mark All',
                   style: TextStyle(
                     color: Color(0xFF137FEC),
@@ -155,56 +215,59 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Notification>>(
-        future: _notificationsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(color: Color(0xFF137FEC)),
+      body: RefreshIndicator(
+        color: const Color(0xFF137FEC),
+        onRefresh: _refreshNotifications,
+        child: FutureBuilder<List<Notification>>(
+          future: _notificationsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF137FEC)),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Error loading notifications',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _refreshNotifications,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            _notifications = snapshot.data ?? [];
+
+            if (_notifications.isEmpty) {
+              return _buildEmptyState();
+            }
+
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildSectionTitle('TODAY'),
+                const SizedBox(height: 12),
+                ..._notifications.map((notif) => GestureDetector(
+                  onTap: () => _markAsRead(notif.id),
+                  child: _buildNotificationItem(notif),
+                )),
+                const SizedBox(height: 24),
+              ],
             );
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  SizedBox(height: 16),
-                  Text(
-                    'Error loading notifications',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _notificationsFuture = _fetchNotifications();
-                      });
-                    },
-                    child: Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final notifications = snapshot.data ?? [];
-
-          if (notifications.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          return ListView(
-            padding: EdgeInsets.all(16),
-            children: [
-              _buildSectionTitle('TODAY'),
-              SizedBox(height: 12),
-              ...notifications.map((notif) => _buildNotificationItem(notif)).toList(),
-              SizedBox(height: 24),
-            ],
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -292,7 +355,7 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                notification.timestamp,
+                formatTimestamp(notification.timestamp),
                 style: TextStyle(
                   color: Color(0xFF999999),
                   fontSize: 10,

@@ -172,18 +172,6 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
                   ],
                 ),
                 SizedBox(height: 16),
-
-                // Attach File Button
-                TextButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Attach file functionality')),
-                    );
-                  },
-                  icon: const Icon(Icons.attach_file),
-                  label: const Text('Attach File'),
-                ),
-                SizedBox(height: 32),
               ],
             ),
           ),
@@ -193,9 +181,9 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           border: Border(
-            top: BorderSide(color: Colors.grey[300]!),
+            // top: BorderSide(color: Colors.black!),
           ),
-          color: Colors.grey[50],
+          // color: Colors.black,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -204,6 +192,9 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF137FEC),
+                ),
                 onPressed: _sendBroadcast,
                 child: const Text('Send Notification'),
               ),

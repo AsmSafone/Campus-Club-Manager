@@ -276,6 +276,33 @@ app.post('/api/clubs', verifyToken, async (req, res) => {
     }
 });
 
+// Get club details (for admin/anyone)
+app.get('/api/clubs/:clubId', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { clubId } = req.params;
+        const [clubs] = await pool.query(
+            'SELECT club_id, name, description, founded_date FROM Club WHERE club_id = ?',
+            [clubId]
+        );
+        if (clubs.length === 0) {
+            return res.status(404).json({ message: 'Club not found' });
+        }
+        // Optionally, add member count
+        const [memberCount] = await pool.query(
+            'SELECT COUNT(*) as count FROM Membership WHERE club_id = ?',
+            [clubId]
+        );
+        res.json({
+            ...clubs[0],
+            member_count: memberCount[0].count
+        });
+    } catch (err) {
+        console.error('Get club details error:', err);
+        res.status(500).json({ error: 'Failed to fetch club details' });
+    }
+});
+
 app.put('/api/clubs/:clubId', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;
@@ -289,7 +316,7 @@ app.put('/api/clubs/:clubId', verifyToken, async (req, res) => {
             'UPDATE Club SET name = ?, description = ?, founded_date = ? WHERE club_id = ?',
             [name, description || null, founded_date || null, clubId]
         );
-        res.json({ message: 'Club updated' });
+        res.status(200).json({ message: 'Club updated' });
     } catch (err) {
         console.error('Update club error:', err);
         res.status(500).json({ error: 'Failed to update club' });
@@ -341,6 +368,44 @@ app.get('/api/clubs/:clubId/events', verifyToken, async (req, res) => {
     } catch (err) {
         console.error('Get events error:', err);
         res.status(500).json({ error: 'Failed to fetch events' });
+    }
+});
+
+// Get upcoming events for all clubs the current user is a member of (date >= today)
+app.get('/api/users/me/upcoming-events', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const userId = req.user?.userId || req.user?.user_id || null;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        const [events] = await pool.query(`
+            SELECT 
+                e.event_id,
+                e.title,
+                e.description,
+                e.date,
+                e.venue,
+                e.club_id,
+                c.name as club_name,
+                (SELECT COUNT(*) FROM Registration r WHERE r.event_id = e.event_id) as attendees,
+                (SELECT COUNT(*) FROM Registration r WHERE r.event_id = e.event_id AND r.user_id = ?) as is_registered
+            FROM Event e
+            JOIN Club c ON e.club_id = c.club_id
+            WHERE e.club_id IN (SELECT club_id FROM Membership WHERE user_id = ?)
+              AND e.date >= CURDATE()
+            ORDER BY e.date ASC
+        `, [userId, userId]);
+
+        // normalize is_registered to boolean
+        const mapped = events.map(ev => ({
+            ...ev,
+            is_registered: (ev.is_registered && ev.is_registered > 0) ? true : false
+        }));
+
+        res.json(mapped);
+    } catch (err) {
+        console.error('Get my upcoming events error:', err);
+        res.status(500).json({ error: 'Failed to fetch user upcoming events' });
     }
 });
 
@@ -440,7 +505,7 @@ app.get('/api/clubs/:clubId/members', verifyToken, async (req, res) => {
             ORDER BY u.name
         `, [clubId]);
         
-        res.json(members);
+        res.status(200).json(members);
     } catch (err) {
         console.error('Get club members error:', err);
         res.status(500).json({ error: 'Failed to fetch club members' });

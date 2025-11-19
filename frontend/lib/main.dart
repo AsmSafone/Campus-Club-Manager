@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
-import 'screens/admin/admin_user_role_assignment_screen.dart';
-import 'screens/broadcast_message_screen.dart';
+import 'screens/executive/broadcast_message_screen.dart';
 import 'screens/executive/executive_dashboard_screen.dart';
 import 'screens/club_executive_club_management_screen.dart';
-import 'screens/admin/club_management_for_admins_screen.dart';
+// import 'screens/admin/club_management_for_admins_screen.dart';
 import 'screens/member/member_dashboard_screen.dart';
 import 'screens/financial_overview_screen.dart';
 import 'screens/financial_report_generation_screen.dart';
@@ -72,15 +71,6 @@ class MyApp extends StatelessWidget {
                 user: args?['user'],
               ),
             );
-          case '/user-role-assignment':
-            final args = settings.arguments as Map<String, dynamic>?;
-            return MaterialPageRoute(
-              builder: (context) => ManageUserRolesPage(
-                clubId: args?['clubId'],
-                clubName: args?['clubName'],
-                token: args?['token'],
-              ),
-            );
           default:
             return MaterialPageRoute(builder: (context) => AuthScreen());
         }
@@ -125,11 +115,11 @@ class _MyHomePageState extends State<MyHomePage> {
         icon: Icons.apartment,
         screen: ClubExecutiveClubManagementScreen(),
       ),
-      ScreenItem(
-        title: 'Club Management (Admin)',
-        icon: Icons.admin_panel_settings,
-        screen: ClubManagementForAdminsScreen(),
-      ),
+      // ScreenItem(
+      //   title: 'Club Management (Admin)',
+      //   icon: Icons.admin_panel_settings,
+      //   screen: ClubManagementForAdminsScreen(),
+      // ),
       ScreenItem(
         title: 'Member Dashboard',
         icon: Icons.people,
