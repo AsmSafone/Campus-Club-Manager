@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class BroadcastMessageScreen extends StatefulWidget {
+  final String? token;
+  final Map<String, dynamic>? user;
+  final int? clubId;
+  BroadcastMessageScreen({Key? key, this.token, this.user, this.clubId}) : super(key: key);
+
   @override
   _BroadcastMessageScreenState createState() => _BroadcastMessageScreenState();
 }
@@ -9,28 +16,59 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-  String _selectedAudience = 'All Members';
   int _messageCharCount = 0;
+  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  int? _clubId;
 
-  final List<String> _audienceOptions = [
-    'All Members',
-    'Executives',
-    'New Members',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _clubId = widget.clubId ?? widget.user?['clubId'] ?? 1;
+  }
 
-  void _sendBroadcast() {
+  Future<void> _sendBroadcast() async {
     if (_formKey.currentState!.validate()) {
       final subject = _subjectController.text.trim();
-      final audience = _selectedAudience;
+      final message = _messageController.text.trim();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Announcement sent to $audience: "$subject"')),
-      );
+      if (widget.token != null && widget.token!.isNotEmpty) {
+        try {
+          final headers = {
+            'Authorization': 'Bearer ${widget.token}',
+            'Content-Type': 'application/json',
+          };
+          final uri = Uri.parse('$_apiBaseUrl/api/clubs/${_clubId}/notifications');
+          final resp = await http.post(
+            uri,
+            headers: headers,
+            body: json.encode({
+              'title': subject,
+              'description': message,
+            }),
+          );
+          if (resp.statusCode == 201) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Notification sent: "$subject"')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to send (${resp.statusCode})')),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.toString()}')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Notification sent: "$subject"')),
+        );
+      }
 
       _subjectController.clear();
       _messageController.clear();
       setState(() {
-        _selectedAudience = 'All Members';
         _messageCharCount = 0;
       });
     }
@@ -47,7 +85,7 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Compose Announcement'),
+        title: const Text('Compose Notification'),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -62,24 +100,7 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Audience Selector
-                Text(
-                  'To:',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                SizedBox(height: 12),
-                SegmentedButton<String>(
-                  segments: _audienceOptions.map((audience) {
-                    return ButtonSegment(label: Text(audience), value: audience);
-                  }).toList(),
-                  selected: {_selectedAudience},
-                  onSelectionChanged: (Set<String> newSelection) {
-                    setState(() {
-                      _selectedAudience = newSelection.first;
-                    });
-                  },
-                ),
-                SizedBox(height: 24),
+                
 
                 // Subject Field
                 Text(
@@ -90,7 +111,7 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
                 TextFormField(
                   controller: _subjectController,
                   decoration: InputDecoration(
-                    hintText: 'Enter the announcement title',
+                    hintText: 'Enter notification title',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -184,18 +205,11 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
               height: 48,
               child: ElevatedButton(
                 onPressed: _sendBroadcast,
-                child: const Text('Send Announcement'),
+                child: const Text('Send Notification'),
               ),
             ),
             SizedBox(height: 8),
-            Text(
-              'This will be sent to 150 members.',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
+            const SizedBox.shrink(),
           ],
         ),
       ),

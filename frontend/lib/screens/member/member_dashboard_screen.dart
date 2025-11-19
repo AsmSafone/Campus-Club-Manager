@@ -12,7 +12,8 @@ import 'package:frontend/screens/user_profile_management_screen.dart';
 class MemberDashboardScreen extends StatefulWidget {
   final String? token;
   final Map<String, dynamic>? user;
-  const MemberDashboardScreen({Key? key, this.token, this.user}) : super(key: key);
+  const MemberDashboardScreen({Key? key, this.token, this.user})
+    : super(key: key);
 
   @override
   _MemberDashboardScreenState createState() => _MemberDashboardScreenState();
@@ -82,7 +83,9 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
       _userName = widget.user!['name']?.toString() ?? _userName;
       _userEmail = widget.user!['email']?.toString();
       if (widget.user!['clubId'] != null) {
-        _clubId = widget.user!['clubId'] is int ? widget.user!['clubId'] as int : int.tryParse('${widget.user!['clubId']}');
+        _clubId = widget.user!['clubId'] is int
+            ? widget.user!['clubId'] as int
+            : int.tryParse('${widget.user!['clubId']}');
       }
     }
     _loadDashboard();
@@ -100,14 +103,24 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     if (widget.token == null) return;
     try {
       final uri = Uri.parse('$_apiBaseUrl/api/notifications');
-      final resp = await http.get(uri, headers: {'Authorization': 'Bearer ${widget.token}'});
+      final resp = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer ${widget.token}'},
+      );
       if (resp.statusCode == 200) {
         final List<dynamic> list = json.decode(resp.body) as List<dynamic>;
-        final items = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        final items = list
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
         setState(() {
           _notifications = items;
-          _unreadNotifications = items.where((n) => n['isRead'] == false).length;
-          announcements = items.where((n) => (n['type'] ?? '') == 'announcement').map((n) => Announcement.fromMap(n)).toList();
+          _unreadNotifications = items
+              .where((n) => n['isRead'] == false)
+              .length;
+          announcements = items
+              .where((n) => (n['type'] ?? '') == 'announcement')
+              .map((n) => Announcement.fromMap(n))
+              .toList();
         });
       }
     } catch (_) {}
@@ -117,32 +130,45 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     if (_clubId == null || widget.token == null) return;
     try {
       final uri = Uri.parse('$_apiBaseUrl/api/clubs/me/events');
-      final resp = await http.get(uri, headers: {'Authorization': 'Bearer ${widget.token}'});
+      final resp = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer ${widget.token}'},
+      );
       if (resp.statusCode == 200) {
         final List<dynamic> list = json.decode(resp.body) as List<dynamic>;
         setState(() {
           final now = DateTime.now();
-          final all = list.map((e) => Event.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+          final all = list
+              .map((e) => Event.fromMap(Map<String, dynamic>.from(e as Map)))
+              .toList();
 
           // Keep only events with a parseable date that is today or in the future, and sort by date ascending.
-          events = all.where((ev) {
-            DateTime? dt = DateTime.tryParse(ev.date);
-            if (dt == null) {
-              final ms = int.tryParse(ev.date);
-              if (ms != null) dt = DateTime.fromMillisecondsSinceEpoch(ms);
-            }
-            return dt != null && (dt.isAfter(now) || dt.isAtSameMomentAs(now));
-          }).toList()
-            ..sort((a, b) {
-              DateTime? da = DateTime.tryParse(a.date) ?? (int.tryParse(a.date) != null ? DateTime.fromMillisecondsSinceEpoch(int.parse(a.date)) : null);
-              DateTime? db = DateTime.tryParse(b.date) ?? (int.tryParse(b.date) != null ? DateTime.fromMillisecondsSinceEpoch(int.parse(b.date)) : null);
-              if (da == null && db == null) return 0;
-              if (da == null) return 1;
-              if (db == null) return -1;
-              return da.compareTo(db);
-            });
+          events =
+              all.where((ev) {
+                DateTime? dt = DateTime.tryParse(ev.date);
+                if (dt == null) {
+                  final ms = int.tryParse(ev.date);
+                  if (ms != null) dt = DateTime.fromMillisecondsSinceEpoch(ms);
+                }
+                return dt != null &&
+                    (dt.isAfter(now) || dt.isAtSameMomentAs(now));
+              }).toList()..sort((a, b) {
+                DateTime? da =
+                    DateTime.tryParse(a.date) ??
+                    (int.tryParse(a.date) != null
+                        ? DateTime.fromMillisecondsSinceEpoch(int.parse(a.date))
+                        : null);
+                DateTime? db =
+                    DateTime.tryParse(b.date) ??
+                    (int.tryParse(b.date) != null
+                        ? DateTime.fromMillisecondsSinceEpoch(int.parse(b.date))
+                        : null);
+                if (da == null && db == null) return 0;
+                if (da == null) return 1;
+                if (db == null) return -1;
+                return da.compareTo(db);
+              });
         });
-        
       }
     } catch (_) {}
   }
@@ -160,158 +186,183 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
         color: const Color(0xFF137FEC),
         onRefresh: _loadDashboard,
         child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Hi, $_userName',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      // notifications with badge
-                      Stack(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.notifications, color: Colors.white),
-                            onPressed: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (_) => NotificationViewScreen(
-                                  token: widget.token,
-                                ),
-                              ));
-                            },
-                          ),
-                          if (_unreadNotifications > 0)
-                            Positioned(
-                              right: 6,
-                              top: 6,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                child: Text('$_unreadNotifications', style: const TextStyle(color: Colors.white, fontSize: 10)),
-                              ),
-                            ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.logout, color: Colors.white),
-                        onPressed: () {
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            '/auth',
-                            (route) => false,
-                          );
-                        },
-                        tooltip: 'Logout',
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Color(0xFF192734),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[800]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    Text(
+                      'Hi, $_userName',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Important Announcement!',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                        // notifications with badge
+                        Stack(
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.notifications,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => NotificationViewScreen(
+                                      token: widget.token,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            if (_unreadNotifications > 0)
+                              Positioned(
+                                right: 6,
+                                top: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '$_unreadNotifications',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Our next general body meeting has been rescheduled. See the new date and time.',
-                                style: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
                         IconButton(
-                          icon: Icon(Icons.close, color: Colors.grey[600]),
-                          onPressed: () {},
+                          icon: const Icon(Icons.logout, color: Colors.white),
+                          onPressed: () {
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/auth',
+                              (route) => false,
+                            );
+                          },
+                          tooltip: 'Logout',
                         ),
                       ],
-                    ),
-                    SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Learn more')),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Learn More',
-                            style: TextStyle(
-                              color: Color(0xFF4A90E2),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 4),
-                          Icon(Icons.arrow_forward, size: 16, color: Color(0xFF4A90E2)),
-                        ],
-                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-            SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                'Upcoming Events',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF192734),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[800]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Important Announcement!',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Our next general body meeting has been rescheduled. See the new date and time.',
+                                  style: TextStyle(
+                                    color: Colors.grey[400],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close, color: Colors.grey[600]),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () => ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('Learn more'))),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Learn More',
+                              style: TextStyle(
+                                color: Color(0xFF4A90E2),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward,
+                              size: 16,
+                              color: Color(0xFF4A90E2),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  ...events.map((event) => _buildEventCard(event)).toList(),
-                  SizedBox(width: 8),
-                ],
+              SizedBox(height: 16),
+              events.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Text(
+                        'Upcoming Events',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  : SizedBox.shrink(),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    ...events.map((event) => _buildEventCard(event)).toList(),
+                    SizedBox(width: 8),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 24),
-            
-          ],
+              SizedBox(height: 24),
+            ],
+          ),
         ),
-      ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFF192734),
@@ -327,25 +378,31 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
           print(index);
           // Events: open ClubEventsScreen (requires clubId and token)
           if (index == 1) {
-            await Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => MyEventList(token: widget.token, clubId: _clubId),
-            ));
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    MyEventList(token: widget.token, clubId: _clubId),
+              ),
+            );
             return;
           }
 
           // Members: open membership management
           if (index == 2) {
-            await Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => ClubListScreen(token: widget.token, clubId: _clubId),
-            ));
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    ClubListScreen(token: widget.token, clubId: _clubId),
+              ),
+            );
             return;
           }
 
           // Profile: open user profile management
           if (index == 3) {
-            await Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => UserProfileManagementScreen(),
-            ));
+            await Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => UserProfileManagementScreen()),
+            );
             return;
           }
         },
@@ -420,13 +477,9 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                 SizedBox(height: 4),
                 Text(
                   event.date,
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
                 ),
                 SizedBox(height: 12),
-                
               ],
             ),
           ),
@@ -458,20 +511,14 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
           SizedBox(height: 6),
           Text(
             announcement.description,
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.grey[400], fontSize: 12),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: 8),
           Text(
             announcement.date,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 10,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 10),
           ),
         ],
       ),

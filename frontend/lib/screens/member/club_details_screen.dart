@@ -187,7 +187,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
                   hintText: 'Search members by name...',
                   hintStyle: TextStyle(color: Colors.grey[500]),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14,horizontal: 12),
                 ),
               ),
             ),

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/club_executive_club_management_screen.dart';
-import 'package:frontend/screens/club_management_for_admins_screen.dart';
+import 'package:frontend/screens/admin/admin_club_details_screen.dart';
+import 'package:frontend/screens/admin/admin_user_role_assignment_screen.dart';
+import 'package:frontend/screens/admin/club_management_for_admins_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AdminDashboardScreen extends StatefulWidget {
   final String? token;
   final Map<String, dynamic>? user;
-  const AdminDashboardScreen({Key? key, this.token, this.user}) : super(key: key);
+  const AdminDashboardScreen({Key? key, this.token, this.user})
+    : super(key: key);
 
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
@@ -16,22 +18,24 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String _selectedView = 'Clubs';
   final TextEditingController _searchController = TextEditingController();
-  
+
   // Club form controllers
   final TextEditingController _clubNameController = TextEditingController();
-  final TextEditingController _clubDescriptionController = TextEditingController();
-  final TextEditingController _clubFoundedDateController = TextEditingController();
-  
+  final TextEditingController _clubDescriptionController =
+      TextEditingController();
+  final TextEditingController _clubFoundedDateController =
+      TextEditingController();
+
   List<Map<String, dynamic>> _clubs = [];
   List<Map<String, dynamic>> _filteredClubs = [];
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _filteredUsers = [];
-  
+
   Map<String, dynamic>? _stats;
-  
+
   bool _isLoading = true;
   String? _errorMessage;
-  
+
   // final String _apiBaseUrl = 'http://localhost:3000';
   final String _apiBaseUrl = 'http://10.0.2.2:3000';
 
@@ -57,18 +61,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   void _filterData() {
     final query = _searchController.text.toLowerCase();
-    
+
     setState(() {
       if (_selectedView == 'Clubs') {
         _filteredClubs = _clubs
-            .where((club) =>
-                club['name'].toLowerCase().contains(query))
+            .where((club) => club['name'].toLowerCase().contains(query))
             .toList();
       } else {
         _filteredUsers = _users
-            .where((user) =>
-                user['name'].toLowerCase().contains(query) ||
-                user['role'].toLowerCase().contains(query))
+            .where(
+              (user) =>
+                  user['name'].toLowerCase().contains(query) ||
+                  user['role'].toLowerCase().contains(query),
+            )
             .toList();
       }
     });
@@ -84,7 +89,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (widget.token == null || widget.token!.isEmpty) {
         print('DEBUG: Token is null or empty: ${widget.token}');
         setState(() {
-          _errorMessage = 'No authentication token available. Please login again.';
+          _errorMessage =
+              'No authentication token available. Please login again.';
           _isLoading = false;
         });
         return;
@@ -106,7 +112,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _fetchUsers(headers),
       ]);
 
-      print('DEBUG: Results received - Stats: ${results[0]}, Clubs: ${results[1]}, Users: ${results[2]}');
+      print(
+        'DEBUG: Results received - Stats: ${results[0]}, Clubs: ${results[1]}, Users: ${results[2]}',
+      );
 
       setState(() {
         _stats = results[0] as Map<String, dynamic>?;
@@ -139,7 +147,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        throw Exception('Failed to load stats: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to load stats: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('DEBUG: Error fetching stats: $e');
@@ -147,7 +157,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchClubs(Map<String, String> headers) async {
+  Future<List<Map<String, dynamic>>> _fetchClubs(
+    Map<String, String> headers,
+  ) async {
     try {
       print('DEBUG: Fetching clubs from $_apiBaseUrl/api/clubs/list');
       final response = await http.get(
@@ -160,14 +172,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((club) => {
-          'club_id': club['club_id'],
-          'name': club['name'],
-          'members': club['members_count'],
-          'status': club['status'],
-        }).toList();
+        return data
+            .map(
+              (club) => {
+                'club_id': club['club_id'],
+                'name': club['name'],
+                'members': club['members_count'],
+                'status': club['status'],
+              },
+            )
+            .toList();
       } else {
-        throw Exception('Failed to load clubs: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to load clubs: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('DEBUG: Error fetching clubs: $e');
@@ -175,7 +193,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchUsers(Map<String, String> headers) async {
+  Future<List<Map<String, dynamic>>> _fetchUsers(
+    Map<String, String> headers,
+  ) async {
     try {
       print('DEBUG: Fetching users from $_apiBaseUrl/api/users/list');
       final response = await http.get(
@@ -188,14 +208,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((user) => {
-          'user_id': user['user_id'],
-          'name': user['name'],
-          'role': user['role'],
-          'status': user['status'],
-        }).toList();
+        return data
+            .map(
+              (user) => {
+                'user_id': user['user_id'],
+                'name': user['name'],
+                'role': user['role'],
+                'status': user['status'],
+              },
+            )
+            .toList();
       } else {
-        throw Exception('Failed to load users: ${response.statusCode} - ${response.body}');
+        throw Exception(
+          'Failed to load users: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('DEBUG: Error fetching users: $e');
@@ -227,9 +253,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -256,9 +282,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -339,9 +365,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _submitCreateClub() async {
     if (_clubNameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Club name is required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Club name is required')));
       return;
     }
 
@@ -380,7 +406,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           final errorData = json.decode(response.body);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to create club: ${errorData['message'] ?? 'Unknown error'}'),
+              content: Text(
+                'Failed to create club: ${errorData['message'] ?? 'Unknown error'}',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -395,9 +423,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       }
     } catch (e) {
       print('DEBUG: Error creating club: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -411,10 +439,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/auth',
-                (route) => false,
-              );
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/auth', (route) => false);
             },
             tooltip: 'Logout',
           ),
@@ -423,138 +450,143 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_errorMessage!),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadDashboardData,
-                        child: const Text('Retry'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_errorMessage!),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadDashboardData,
+                    child: const Text('Retry'),
                   ),
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Stats Section
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Total Clubs',
-                                    value: (_stats?['totalClubs'] ?? 0).toString(),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Active Users',
-                                    value: (_stats?['activeUsers'] ?? 0).toString(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Pending Approvals',
-                                    value: (_stats?['pendingApprovals'] ?? 0).toString(),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _StatCard(
-                                    title: 'Event Sign-ups',
-                                    value: (_stats?['eventSignups'] ?? 0).toString(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Search Bar
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search clubs or users...',
-                            prefixIcon: const Icon(Icons.search),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // View Toggle
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Stats Section
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Row(
                           children: [
                             Expanded(
-                              child: SegmentedButton<String>(
-                                segments: const [
-                                  ButtonSegment(label: Text('Clubs'), value: 'Clubs'),
-                                  ButtonSegment(label: Text('Users'), value: 'Users'),
-                                ],
-                                selected: {_selectedView},
-                                onSelectionChanged: (Set<String> newSelection) {
-                                  setState(() {
-                                    _selectedView = newSelection.first;
-                                    _searchController.clear();
-                                    _filterData();
-                                  });
-                                },
+                              child: _StatCard(
+                                title: 'Total Clubs',
+                                value: (_stats?['totalClubs'] ?? 0).toString(),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                title: 'Active Users',
+                                value: (_stats?['activeUsers'] ?? 0).toString(),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // List Section
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: _selectedView == 'Clubs'
-                            ? _filteredClubs.isEmpty
-                                ? const Center(
-                                    child: Text('No clubs found'),
-                                  )
-                                : Column(
-                                    children: _filteredClubs.map((club) {
-                                      return _buildClubCard(club);
-                                    }).toList(),
-                                  )
-                            : _filteredUsers.isEmpty
-                                ? const Center(
-                                    child: Text('No users found'),
-                                  )
-                                : Column(
-                                    children: _filteredUsers.map((user) {
-                                      return _buildUserCard(user);
-                                    }).toList(),
-                                  ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                title: 'Pending Approvals',
+                                value: (_stats?['pendingApprovals'] ?? 0)
+                                    .toString(),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                title: 'Event Sign-ups',
+                                value: (_stats?['eventSignups'] ?? 0)
+                                    .toString(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search clubs or users...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // View Toggle
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: SegmentedButton<String>(
+                            segments: const [
+                              ButtonSegment(
+                                label: Text('Clubs'),
+                                value: 'Clubs',
+                              ),
+                              ButtonSegment(
+                                label: Text('Users'),
+                                value: 'Users',
+                              ),
+                            ],
+                            selected: {_selectedView},
+                            onSelectionChanged: (Set<String> newSelection) {
+                              setState(() {
+                                _selectedView = newSelection.first;
+                                _searchController.clear();
+                                _filterData();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // List Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: _selectedView == 'Clubs'
+                        ? _filteredClubs.isEmpty
+                              ? const Center(child: Text('No clubs found'))
+                              : Column(
+                                  children: _filteredClubs.map((club) {
+                                    return _buildClubCard(club);
+                                  }).toList(),
+                                )
+                        : _filteredUsers.isEmpty
+                        ? const Center(child: Text('No users found'))
+                        : Column(
+                            children: _filteredUsers.map((user) {
+                              return _buildUserCard(user);
+                            }).toList(),
+                          ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddClubModal,
         child: const Icon(Icons.add),
@@ -571,10 +603,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  child: Text(club['name'][0]),
-                ),
+                CircleAvatar(radius: 24, child: Text(club['name'][0])),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -584,8 +613,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         club['name'],
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Text('${club['members']} Members',
-                          style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                      Text(
+                        '${club['members']} Members',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -600,13 +634,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ClubManagementForAdminsScreen(
-                          
+                        builder: (context) => AdminClubDetailsScreen(
+                          clubId: club['id'],
+                          // club: club,
+                          token: widget.token,
                         ),
                       ),
                     );
                   },
-                  
+
                   child: const Text('View'),
                 ),
               ),
@@ -624,10 +660,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 24,
-              child: Text(user['name'][0]),
-            ),
+            CircleAvatar(radius: 24, child: Text(user['name'][0])),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -637,8 +670,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     user['name'],
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Text(user['role'],
-                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(
+                    user['role'],
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
                 ],
               ),
             ),

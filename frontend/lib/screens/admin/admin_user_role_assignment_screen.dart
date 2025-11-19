@@ -6,11 +6,11 @@ class ManageUserRolesPage extends StatefulWidget {
   final int? clubId;
   final String? clubName;
   final String? token;
-  
+
   const ManageUserRolesPage({
     Key? key,
-    this.clubId,
-    this.clubName,
+    required this.clubId,
+    required this.clubName,
     this.token,
   }) : super(key: key);
 
@@ -48,9 +48,11 @@ class _ManageUserRolesPageState extends State<ManageUserRolesPage> {
     final query = _searchController.text.toLowerCase();
     setState(() {
       _filteredMembers = _members
-          .where((member) =>
-              member['name'].toLowerCase().contains(query) ||
-              member['email'].toLowerCase().contains(query))
+          .where(
+            (member) =>
+                member['name'].toLowerCase().contains(query) ||
+                member['email'].toLowerCase().contains(query),
+          )
           .toList();
     });
   }
@@ -79,14 +81,16 @@ class _ManageUserRolesPageState extends State<ManageUserRolesPage> {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
           _members = List<Map<String, dynamic>>.from(
-            data.map((member) => {
-              'membership_id': member['membership_id'],
-              'user_id': member['user_id'],
-              'name': member['name'],
-              'email': member['email'],
-              'role': member['role'],
-              'join_date': member['join_date'],
-            })
+            data.map(
+              (member) => {
+                'membership_id': member['membership_id'],
+                'user_id': member['user_id'],
+                'name': member['name'],
+                'email': member['email'],
+                'role': member['role'],
+                'join_date': member['join_date'],
+              },
+            ),
           );
           _filteredMembers = _members;
           _isLoading = false;
@@ -105,7 +109,10 @@ class _ManageUserRolesPageState extends State<ManageUserRolesPage> {
     }
   }
 
-  Future<void> _updateUserRole(Map<String, dynamic> member, String newRole) async {
+  Future<void> _updateUserRole(
+    Map<String, dynamic> member,
+    String newRole,
+  ) async {
     try {
       final headers = {
         'Authorization': 'Bearer ${widget.token}',
@@ -113,25 +120,33 @@ class _ManageUserRolesPageState extends State<ManageUserRolesPage> {
       };
 
       final response = await http.patch(
-        Uri.parse('$_apiBaseUrl/api/clubs/${widget.clubId}/members/${member['user_id']}/role'),
+        Uri.parse(
+          '$_apiBaseUrl/api/clubs/${widget.clubId}/members/${member['user_id']}/role',
+        ),
         headers: headers,
         body: json.encode({'role': newRole}),
       );
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("${member['name']}'s role has been updated to $newRole.")),
+          SnackBar(
+            content: Text(
+              "${member['name']}'s role has been updated to $newRole.",
+            ),
+          ),
         );
         _loadClubMembers();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update role: ${response.statusCode}')),
+          SnackBar(
+            content: Text('Failed to update role: ${response.statusCode}'),
+          ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -139,9 +154,11 @@ class _ManageUserRolesPageState extends State<ManageUserRolesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.clubName != null 
-            ? "Manage Roles - ${widget.clubName}" 
-            : "Manage User Roles"),
+        title: Text(
+          widget.clubName != null
+              ? "Manage Roles - ${widget.clubName}"
+              : "Manage User Roles",
+        ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -158,63 +175,61 @@ class _ManageUserRolesPageState extends State<ManageUserRolesPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_errorMessage!),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadClubMembers,
-                        child: const Text('Retry'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_errorMessage!),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadClubMembers,
+                    child: const Text('Retry'),
                   ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          labelText: "Search by name or email...",
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Expanded(
-                        child: _filteredMembers.isEmpty
-                            ? Center(
-                                child: Text('No members found'),
-                              )
-                            : ListView.builder(
-                                itemCount: _filteredMembers.length,
-                                itemBuilder: (context, index) {
-                                  final member = _filteredMembers[index];
-                                  return Card(
-                                    child: ListTile(
-                                      title: Text(member["name"] ?? 'Unknown'),
-                                      subtitle: Text(member["email"] ?? 'No email'),
-                                      trailing: Text(member["role"] ?? 'Member'),
-                                      onTap: () {
-                                        _showRoleDialog(member);
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
+                ],
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      labelText: "Search by name or email...",
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
+                  SizedBox(height: 16),
+                  Expanded(
+                    child: _filteredMembers.isEmpty
+                        ? Center(child: Text('No members found'))
+                        : ListView.builder(
+                            itemCount: _filteredMembers.length,
+                            itemBuilder: (context, index) {
+                              final member = _filteredMembers[index];
+                              return Card(
+                                child: ListTile(
+                                  title: Text(member["name"] ?? 'Unknown'),
+                                  subtitle: Text(member["email"] ?? 'No email'),
+                                  trailing: Text(member["role"] ?? 'Member'),
+                                  onTap: () {
+                                    _showRoleDialog(member);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
   void _showRoleDialog(Map<String, dynamic> member) {
     String? tempRole = member["role"];
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -225,7 +240,10 @@ class _ManageUserRolesPageState extends State<ManageUserRolesPage> {
               content: DropdownButtonFormField<String>(
                 value: tempRole,
                 items: ["President", "Secretary", "Member"]
-                    .map((role) => DropdownMenuItem(value: role, child: Text(role)))
+                    .map(
+                      (role) =>
+                          DropdownMenuItem(value: role, child: Text(role)),
+                    )
                     .toList(),
                 onChanged: (value) {
                   setDialogState(() {

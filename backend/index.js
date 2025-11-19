@@ -165,7 +165,15 @@ app.get('/api/admin/stats', verifyToken, async (req, res) => {
 app.get('/api/clubs/list', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;
-        
+        const { search, sort } = req.query;
+        const whereClauses = [];
+        const params = [];
+        if (search) {
+            whereClauses.push('c.name LIKE ?');
+            params.push(`%${search}%`);
+        }
+        const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+        const orderSql = (sort === 'newest') ? 'ORDER BY c.founded_date DESC' : 'ORDER BY c.name ASC';
         const [clubs] = await pool.query(`
             SELECT 
                 c.club_id,
@@ -175,16 +183,14 @@ app.get('/api/clubs/list', verifyToken, async (req, res) => {
                 COUNT(m.membership_id) as members_count
             FROM Club c
             LEFT JOIN Membership m ON c.club_id = m.club_id
+            ${whereSql}
             GROUP BY c.club_id, c.name, c.description, c.founded_date
-            ORDER BY c.name
-        `);
-        
-        // Determine status based on member count
-        const clubsWithStatus = clubs.map(club => ({
-            ...club,
-            status: club.members_count === 0 ? 'Pending' : 'Approved'
+            ${orderSql}
+        `, params);
+        const clubsWithStatus = clubs.map(c => ({
+            ...c,
+            status: c.members_count === 0 ? 'Pending' : 'Approved'
         }));
-        
         res.json(clubsWithStatus);
     } catch (err) {
         console.error('Get clubs error:', err);
@@ -243,11 +249,50 @@ app.patch('/api/clubs/:clubId/approve', verifyToken, async (req, res) => {
                 [userId, clubId, 'President', new Date().toISOString().split('T')[0]]
             );
         }
-        
         res.json({ message: 'Club approved successfully' });
     } catch (err) {
         console.error('Approve club error:', err);
         res.status(500).json({ error: 'Failed to approve club' });
+    }
+});
+
+// removed suspend endpoint; status not stored in DB
+
+app.post('/api/clubs', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { name, description, founded_date } = req.body;
+        if (!name) {
+            return res.status(400).json({ message: 'Name is required' });
+        }
+        const [result] = await pool.query(
+            'INSERT INTO Club (name, description, founded_date) VALUES (?, ?, ?)',
+            [name, description || null, founded_date || null]
+        );
+        res.status(201).json({ club_id: result.insertId, message: 'Club created' });
+    } catch (err) {
+        console.error('Create club error:', err);
+        res.status(500).json({ error: 'Failed to create club' });
+    }
+});
+
+app.put('/api/clubs/:clubId', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { clubId } = req.params;
+        const { name, description, founded_date } = req.body;
+        const [clubExists] = await pool.query('SELECT club_id FROM Club WHERE club_id = ?', [clubId]);
+        if (clubExists.length === 0) {
+            return res.status(404).json({ message: 'Club not found' });
+        }
+        await pool.query(
+            'UPDATE Club SET name = ?, description = ?, founded_date = ? WHERE club_id = ?',
+            [name, description || null, founded_date || null, clubId]
+        );
+        res.json({ message: 'Club updated' });
+    } catch (err) {
+        console.error('Update club error:', err);
+        res.status(500).json({ error: 'Failed to update club' });
     }
 });
 
@@ -620,6 +665,12 @@ app.patch('/api/clubs/:clubId/members/:userId/role', verifyToken, async (req, re
         if (membership.length === 0) {
             return res.status(404).json({ message: 'User is not a member of this club' });
         }
+
+        const already_executive = await pool.query('select * from Membership WHERE user_id = ? and role != Member',[userId]);
+
+        if(already_executive.length > 0){
+            return res.status(300).json({ message: 'User is already an executive'});
+        }
         
         // Update the role
         await pool.query(
@@ -695,41 +746,25 @@ app.get('/api/executive/club/:clubId', verifyToken, async (req, res) => {
 app.get('/api/notifications', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;
-        const userId = req.userId; // From token
-        
-        // For now, return sample notifications
-        // In a real app, you would fetch from database
-        const notifications = [
-            {
-                id: 1,
-                title: 'Event Reminder',
-                description: 'Photography Club: Photo Walk starts in 1 hour.',
-                type: 'event',
-                timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
-                isRead: false,
-                icon: 'event'
-            },
-            {
-                id: 2,
-                title: 'Announcement',
-                description: 'Chess Club: Weekly meeting room has been changed.',
-                type: 'announcement',
-                timestamp: new Date(Date.now() - 60 * 60000).toISOString(),
-                isRead: false,
-                icon: 'campaign'
-            },
-            {
-                id: 3,
-                title: 'New Message',
-                description: 'From Sarah: Can you help with the event setup?',
-                type: 'message',
-                timestamp: new Date(Date.now() - 3 * 60 * 60000).toISOString(),
-                isRead: true,
-                icon: 'chat_bubble'
-            }
-        ];
-        
-        res.json(notifications);
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        const [rows] = await pool.query(
+            `SELECT 
+                n.id AS id,
+                n.title,
+                n.description,
+                'announcement' AS type,
+                NOW() AS timestamp,
+                0 AS isRead,
+                'campaign' AS icon
+            FROM Notification n
+            WHERE n.club_id IN (SELECT club_id FROM Membership WHERE user_id = ?)
+            ORDER BY n.id DESC
+            LIMIT 50`, [userId]
+        );
+
+        res.json(rows);
     } catch (err) {
         console.error('Get notifications error:', err);
         res.status(500).json({ error: 'Failed to fetch notifications' });
@@ -740,7 +775,7 @@ app.get('/api/notifications', verifyToken, async (req, res) => {
 app.get('/api/notifications/settings', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;
-        const userId = req.userId;
+        const userId = req.user?.userId;
         
         // For now, return default settings
         // In a real app, you would fetch from database
@@ -764,7 +799,7 @@ app.get('/api/notifications/settings', verifyToken, async (req, res) => {
 app.put('/api/notifications/settings', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;
-        const userId = req.userId;
+        const userId = req.user?.userId;
         const settings = req.body;
         
         // For now, just acknowledge the update
@@ -954,3 +989,34 @@ app.post('/api/clubs/:clubId/leave', verifyToken, async (req, res) => {
         res.status(500).json({ error: 'Failed to leave club' });
     }
 });
+// Create a simple club notification (executives only)
+app.post('/api/clubs/:clubId/notifications', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const execUserId = req.user?.userId;
+        const { clubId } = req.params;
+        const { title, description } = req.body;
+        if (!execUserId) return res.status(401).json({ message: 'Invalid user' });
+        if (!title) return res.status(400).json({ message: 'Title is required' });
+
+        const [roles] = await pool.query(
+            `SELECT role FROM Membership WHERE user_id = ? AND club_id = ? LIMIT 1`,
+            [execUserId, clubId]
+        );
+        if (roles.length === 0 || (roles[0].role !== 'President' && roles[0].role !== 'Secretary')) {
+            return res.status(403).json({ message: 'Only executives can send notifications' });
+        }
+
+        const [result] = await pool.query(
+            `INSERT INTO Notification (club_id, title, description) VALUES (?, ?, ?)`,
+            [clubId, title, description || null]
+        );
+
+        res.status(201).json({ message: 'Notification created', id: result.insertId });
+    } catch (err) {
+        console.error('Create notification error:', err);
+        res.status(500).json({ error: 'Failed to create notification' });
+    }
+});
+
+// removed event reminder endpoint (simplified notifications)

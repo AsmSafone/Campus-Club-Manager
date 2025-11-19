@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/executive/club_detail_screen.dart';
 import 'package:frontend/screens/financial_overview_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -6,38 +7,42 @@ import '../club_events_screen.dart';
 import '../finance_transactions_screen.dart';
 import '../club_executive_club_management_screen.dart';
 import '../notification_view_screen.dart';
+import '../broadcast_message_screen.dart';
 
 class ClubExecutiveDashboardScreen extends StatefulWidget {
   final String? token;
   final Map<String, dynamic>? user;
-  const ClubExecutiveDashboardScreen({Key? key, this.token, this.user}) : super(key: key);
+  const ClubExecutiveDashboardScreen({Key? key, this.token, this.user})
+    : super(key: key);
 
   @override
-  _ClubExecutiveDashboardScreenState createState() => _ClubExecutiveDashboardScreenState();
+  _ClubExecutiveDashboardScreenState createState() =>
+      _ClubExecutiveDashboardScreenState();
 }
 
-class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScreen> {
+class _ClubExecutiveDashboardScreenState
+    extends State<ClubExecutiveDashboardScreen> {
   int _selectedBottomNavIndex = 0;
   final String _apiBaseUrl = 'http://10.0.2.2:3000';
-  
+
   Map<String, dynamic>? _clubDetails;
   List<Map<String, dynamic>> _events = [];
   Map<String, dynamic>? _financeData;
   bool _isLoading = true;
   String? _errorMessage;
   int? _clubId;
-  
+
   // Event form controllers
   final _eventTitleController = TextEditingController();
   final _eventDescriptionController = TextEditingController();
   final _eventDateController = TextEditingController();
   final _eventTimeController = TextEditingController();
   final _eventVenueController = TextEditingController();
-  
+
   // Member form controllers
   final _memberEmailController = TextEditingController();
   final _memberNameController = TextEditingController();
-  
+
   // Finance form controllers
   final _financeTypeController = TextEditingController();
   final _financeAmountController = TextEditingController();
@@ -118,7 +123,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
     }
   }
 
-  Future<Map<String, dynamic>> _fetchClubDetails(Map<String, String> headers) async {
+  Future<Map<String, dynamic>> _fetchClubDetails(
+    Map<String, String> headers,
+  ) async {
     final response = await http.get(
       Uri.parse('$_apiBaseUrl/api/executive/club/$_clubId'),
       headers: headers,
@@ -127,7 +134,7 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       print('Club Details Response: $data');
-      
+
       // Ensure we have the correct data structure
       return {
         'name': data['name'] ?? 'Club Name',
@@ -140,7 +147,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
     }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchEvents(Map<String, String> headers) async {
+  Future<List<Map<String, dynamic>>> _fetchEvents(
+    Map<String, String> headers,
+  ) async {
     final response = await http.get(
       Uri.parse('$_apiBaseUrl/api/clubs/$_clubId/events'),
       headers: headers,
@@ -149,21 +158,25 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return List<Map<String, dynamic>>.from(
-        data.map((event) => {
-          'event_id': event['event_id'],
-          'title': event['title'],
-          'description': event['description'],
-          'date': event['date'],
-          'venue': event['venue'],
-          'attendees': event['attendees'] ?? 0,
-        })
+        data.map(
+          (event) => {
+            'event_id': event['event_id'],
+            'title': event['title'],
+            'description': event['description'],
+            'date': event['date'],
+            'venue': event['venue'],
+            'attendees': event['attendees'] ?? 0,
+          },
+        ),
       );
     } else {
       throw Exception('Failed to load events: ${response.statusCode}');
     }
   }
 
-  Future<Map<String, dynamic>> _fetchFinanceData(Map<String, String> headers) async {
+  Future<Map<String, dynamic>> _fetchFinanceData(
+    Map<String, String> headers,
+  ) async {
     final response = await http.get(
       Uri.parse('$_apiBaseUrl/api/clubs/$_clubId/finance'),
       headers: headers,
@@ -172,19 +185,23 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       print('Finance Data Response: $data');
-      
+
       double totalIncome = 0;
       double totalExpense = 0;
-      
+
       if (data['summary'] != null) {
         var incomeValue = data['summary']['totalIncome'] ?? 0;
         var expenseValue = data['summary']['totalExpense'] ?? 0;
-        
+
         // Handle both String and numeric types
-        totalIncome = incomeValue is String ? double.parse(incomeValue) : (incomeValue as num).toDouble();
-        totalExpense = expenseValue is String ? double.parse(expenseValue) : (expenseValue as num).toDouble();
+        totalIncome = incomeValue is String
+            ? double.parse(incomeValue)
+            : (incomeValue as num).toDouble();
+        totalExpense = expenseValue is String
+            ? double.parse(expenseValue)
+            : (expenseValue as num).toDouble();
       }
-      
+
       return {
         'records': data['records'] ?? [],
         'totalIncome': totalIncome,
@@ -199,9 +216,7 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_errorMessage != null) {
@@ -264,12 +279,16 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                     Stack(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.notifications, color: Colors.white),
+                          icon: const Icon(
+                            Icons.notifications,
+                            color: Colors.white,
+                          ),
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => NotificationViewScreen(token: widget.token),
+                                builder: (_) =>
+                                    NotificationViewScreen(token: widget.token),
                               ),
                             );
                           },
@@ -299,10 +318,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                     IconButton(
                       icon: const Icon(Icons.logout, color: Colors.white),
                       onPressed: () {
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/auth',
-                          (route) => false,
-                        );
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/auth', (route) => false);
                       },
                       tooltip: 'Logout',
                     ),
@@ -317,11 +335,17 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
               child: Row(
                 children: [
                   Expanded(
-                    child: _buildStatCard('Total Members', memberCount.toString()),
+                    child: _buildStatCard(
+                      'Total Members',
+                      memberCount.toString(),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatCard('Upcoming Events', upcomingEvents.toString()),
+                    child: _buildStatCard(
+                      'Upcoming Events',
+                      upcomingEvents.toString(),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -333,7 +357,10 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
 
             // Action buttons
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12.0,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -368,15 +395,21 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
             // Upcoming Events section
             _buildSection(
               title: 'Upcoming Events',
-              subtitle: 'You have $upcomingEvents events in the next month. Manage them here.',
+              subtitle:
+                  'You have $upcomingEvents events in the next month. Manage them here.',
               children: _events.isEmpty
                   ? [const Center(child: Text('No upcoming events'))]
                   : [
-                      for (int i = 0; i < (_events.length > 2 ? 2 : _events.length); i++)
+                      for (
+                        int i = 0;
+                        i < (_events.length > 2 ? 2 : _events.length);
+                        i++
+                      )
                         Column(
                           children: [
                             _buildEventCardFromData(_events[i]),
-                            if (i < (_events.length > 2 ? 1 : _events.length - 1))
+                            if (i <
+                                (_events.length > 2 ? 1 : _events.length - 1))
                               const SizedBox(height: 12),
                           ],
                         ),
@@ -476,9 +509,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                   const SizedBox(height: 8),
                   Text(
                     'Summary of your club\'s finances.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[400],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[400]),
                   ),
                   const SizedBox(height: 16),
                   // Donut chart representation
@@ -501,17 +534,17 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                           children: [
                             Text(
                               'Balance',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[400],
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.grey[400]),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               '\$${(_financeData?['balance'] ?? 0).toStringAsFixed(2)}',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                             ),
                           ],
                         ),
@@ -536,9 +569,8 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                           const SizedBox(width: 8),
                           Text(
                             'Income: \$${(_financeData?['totalIncome'] ?? 0).toStringAsFixed(2)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[500],
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey[500]),
                           ),
                         ],
                       ),
@@ -556,9 +588,8 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                           const SizedBox(width: 8),
                           Text(
                             'Expenses: \$${(_financeData?['totalExpense'] ?? 0).toStringAsFixed(2)}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[500],
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey[500]),
                           ),
                         ],
                       ),
@@ -594,7 +625,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF137FEC).withOpacity(0.2),
+                            backgroundColor: const Color(
+                              0xFF137FEC,
+                            ).withOpacity(0.2),
                             foregroundColor: const Color(0xFF137FEC),
                           ),
                           child: const Text('View Transactions'),
@@ -621,37 +654,30 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
             setState(() {
               _selectedBottomNavIndex = index;
             });
-            
+
             // Navigate based on selected tab
             switch (index) {
               case 0:
-                // Dashboard - already on this screen
-                break;
-              case 1:
                 // Events - navigate to ClubEventsScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ClubEventsScreen(
-                      token: widget.token,
-                      clubId: _clubId,
-                    ),
+                    builder: (_) =>
+                        ClubEventsScreen(token: widget.token, clubId: _clubId),
                   ),
                 );
                 break;
-              case 2:
+              case 1:
                 // Members - navigate to ClubExecutiveClubManagementScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ClubExecutiveClubManagementScreen(
-                      token: widget.token,
-                      clubId: _clubId,
-                    ),
+                    builder: (_) =>
+                        ClubDetailScreen(token: widget.token, clubId: _clubId),
                   ),
                 );
                 break;
-              case 3:
+              case 2:
                 // Finances - navigate to FinanceTransactionsScreen
                 Navigator.push(
                   context,
@@ -663,10 +689,16 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                   ),
                 );
                 break;
-              case 4:
-                // More - show additional options or navigate to another screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('More options coming soon')),
+              case 3:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BroadcastMessageScreen(
+                      token: widget.token,
+                      user: widget.user,
+                      clubId: _clubId,
+                    ),
+                  ),
                 );
                 break;
             }
@@ -676,11 +708,20 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
           selectedItemColor: const Color(0xFF137FEC),
           unselectedItemColor: Colors.grey[600],
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard),
+              label: 'Dashboard',
+            ),
             BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
             BottomNavigationBarItem(icon: Icon(Icons.groups), label: 'Members'),
-            BottomNavigationBarItem(icon: Icon(Icons.payments), label: 'Finances'),
-            BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'More'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.payments),
+              label: 'Finances',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications),
+              label: '+ Notification',
+            ),
           ],
         ),
       ),
@@ -762,7 +803,8 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                       lastDate: DateTime(2100),
                     );
                     if (picked != null) {
-                      _eventDateController.text = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                      _eventDateController.text =
+                          '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
                     }
                   },
                 ),
@@ -787,7 +829,8 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                       initialTime: TimeOfDay.now(),
                     );
                     if (picked != null) {
-                      _eventTimeController.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                      _eventTimeController.text =
+                          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
                     }
                   },
                 ),
@@ -872,16 +915,18 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
         final errorData = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create event: ${errorData['message'] ?? errorData['error'] ?? 'Unknown error'}'),
+            content: Text(
+              'Failed to create event: ${errorData['message'] ?? errorData['error'] ?? 'Unknown error'}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
       print('Error creating event: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -956,7 +1001,8 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
   }
 
   Future<void> _submitAddMember() async {
-    if (_memberNameController.text.isEmpty || _memberEmailController.text.isEmpty) {
+    if (_memberNameController.text.isEmpty ||
+        _memberEmailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
       );
@@ -985,7 +1031,7 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
       print('Add member response: ${response.statusCode} - ${response.body}');
 
       Navigator.pop(context);
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         await _loadDashboardData();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -996,7 +1042,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
           final errorData = json.decode(response.body);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to add member: ${errorData['message'] ?? errorData['error'] ?? 'Unknown error'}'),
+              content: Text(
+                'Failed to add member: ${errorData['message'] ?? errorData['error'] ?? 'Unknown error'}',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -1011,9 +1059,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
       }
     } catch (e) {
       print('Error adding member: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -1051,15 +1099,18 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFF137FEC)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF137FEC),
+                          ),
                         ),
                       ),
                       items: ['Income', 'Expense']
-                          .map((type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(type),
-                              ))
+                          .map(
+                            (type) => DropdownMenuItem(
+                              value: type,
+                              child: Text(type),
+                            ),
+                          )
                           .toList(),
                       onChanged: (value) {
                         setModalState(() {
@@ -1080,8 +1131,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFF137FEC)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF137FEC),
+                          ),
                         ),
                       ),
                     ),
@@ -1097,8 +1149,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFF137FEC)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF137FEC),
+                          ),
                         ),
                       ),
                       onTap: () async {
@@ -1126,8 +1179,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFF137FEC)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF137FEC),
+                          ),
                         ),
                       ),
                     ),
@@ -1137,7 +1191,10 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () => _submitAddRecord(selectedType),
@@ -1155,7 +1212,8 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
   }
 
   Future<void> _submitAddRecord(String type) async {
-    if (_financeAmountController.text.isEmpty || _financeDateController.text.isEmpty) {
+    if (_financeAmountController.text.isEmpty ||
+        _financeDateController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all required fields')),
       );
@@ -1189,14 +1247,16 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add record: ${response.statusCode}')),
+          SnackBar(
+            content: Text('Failed to add record: ${response.statusCode}'),
+          ),
         );
       }
     } catch (e) {
       print('Error adding record: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -1235,8 +1295,18 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
     // Parse the date to get month and day
     DateTime eventDate = DateTime.parse(event['date']);
     String month = [
-      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
     ][eventDate.month - 1];
     String day = eventDate.day.toString().padLeft(2, '0');
 
@@ -1294,16 +1364,54 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                 const SizedBox(height: 4),
                 Text(
                   '${event['venue'] ?? 'No venue'} • ${event['attendees'] ?? 0} attendees',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[400],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[400]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.alarm, color: Color(0xFF137FEC)),
+                tooltip: 'Send Reminder',
+                onPressed: () async {
+                  final eventId = event['event_id'];
+                  if (widget.token == null || eventId == null) return;
+                  try {
+                    final uri = Uri.parse(
+                      '$_apiBaseUrl/api/events/$eventId/remind',
+                    );
+                    final resp = await http.post(
+                      uri,
+                      headers: {
+                        'Authorization': 'Bearer ${widget.token}',
+                        'Content-Type': 'application/json',
+                      },
+                      body: json.encode({}),
+                    );
+                    if (resp.statusCode == 201 || resp.statusCode == 200) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Reminders sent')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed (${resp.statusCode})')),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
+                },
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
         ],
       ),
     );
@@ -1339,9 +1447,9 @@ class _ClubExecutiveDashboardScreenState extends State<ClubExecutiveDashboardScr
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[500],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
                 ),
               ],
             ),
@@ -1386,16 +1494,13 @@ class DonutChartPainter extends CustomPainter {
   final double income;
   final double expense;
 
-  DonutChartPainter({
-    this.income = 0,
-    this.expense = 0,
-  });
+  DonutChartPainter({this.income = 0, this.expense = 0});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    
+
     final total = income + expense;
     final incomeRatio = total > 0 ? income / total : 0.75;
 

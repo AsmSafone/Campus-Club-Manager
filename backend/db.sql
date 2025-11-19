@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS User (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('Admin', 'Executive', 'Member') NOT NULL DEFAULT 'Member',
+    role ENUM('Admin', 'Executive', 'Member') NOT NULL DEFAULT 'Member'
 );
 
 CREATE TABLE IF NOT EXISTS Club (
@@ -72,3 +72,12 @@ CREATE TABLE IF NOT EXISTS Finance (
 -- insert ignore into Registration (event_id, user_id, status) values (1, 3, 'Registered'), (2, 4, 'Attended'), (3, 5, 'Registered');
 
 -- insert ignore into Finance (club_id, type, amount, date, description) values (1, 'Income', 500.00, '2022-02-01', 'Membership Fees'), (1, 'Expense', 200.00, '2022-02-15', 'Event Supplies'), (2, 'Income', 300.00, '2022-03-01', 'Sponsorship'), (3, 'Expense', 150.00, '2022-03-20', 'Venue Booking');
+-- Notifications (simplified)
+CREATE TABLE IF NOT EXISTS Notification (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    club_id INT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    FOREIGN KEY (club_id) REFERENCES Club(club_id)
+        ON DELETE CASCADE
+);

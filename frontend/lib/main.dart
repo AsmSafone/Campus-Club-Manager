@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'screens/admin_dashboard_screen.dart';
-import 'screens/admin_user_role_assignment_screen.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
+import 'screens/admin/admin_user_role_assignment_screen.dart';
 import 'screens/broadcast_message_screen.dart';
-import 'screens/executive/club_executive_dashboard_screen.dart';
+import 'screens/executive/executive_dashboard_screen.dart';
 import 'screens/club_executive_club_management_screen.dart';
-import 'screens/club_management_for_admins_screen.dart';
+import 'screens/admin/club_management_for_admins_screen.dart';
 import 'screens/member/member_dashboard_screen.dart';
 import 'screens/financial_overview_screen.dart';
 import 'screens/financial_report_generation_screen.dart';
@@ -13,7 +13,7 @@ import 'screens/notification_settings_screen.dart';
 import 'screens/user_profile_management_screen.dart';
 import 'screens/notification_view_screen.dart';
 import 'screens/membership_status_management_screen.dart';
-import 'screens/auth_screen.dart';
+import 'screens/auth/auth_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,7 +44,10 @@ class MyApp extends StatelessWidget {
           case '/auth':
             return MaterialPageRoute(builder: (context) => AuthScreen());
           case '/home':
-            return MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Campus Club Manager'));
+            return MaterialPageRoute(
+              builder: (context) =>
+                  const MyHomePage(title: 'Campus Club Manager'),
+            );
           case '/admin-dashboard':
             final args = settings.arguments as Map<String, dynamic>?;
             return MaterialPageRoute(
@@ -106,11 +109,6 @@ class _MyHomePageState extends State<MyHomePage> {
         title: 'Admin Dashboard',
         icon: Icons.dashboard,
         screen: const AdminDashboardScreen(),
-      ),
-      ScreenItem(
-        title: 'Admin User Role Assignment',
-        icon: Icons.admin_panel_settings,
-        screen: ManageUserRolesPage(),
       ),
       ScreenItem(
         title: 'Broadcast Message',
@@ -185,10 +183,9 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () {
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/auth',
-                (route) => false,
-              );
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/auth', (route) => false);
             },
           ),
         ],
@@ -241,10 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             gradient: LinearGradient(
-              colors: [
-                Colors.deepPurple.shade700,
-                Colors.deepPurple.shade900,
-              ],
+              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade900],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -252,11 +246,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                screenItem.icon,
-                size: 48,
-                color: Colors.white,
-              ),
+              Icon(screenItem.icon, size: 48, color: Colors.white),
               SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -285,9 +275,5 @@ class ScreenItem {
   final IconData icon;
   final Widget screen;
 
-  ScreenItem({
-    required this.title,
-    required this.icon,
-    required this.screen,
-  });
+  ScreenItem({required this.title, required this.icon, required this.screen});
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/executive/club_executive_dashboard_screen.dart';
+import 'package:frontend/screens/executive/executive_dashboard_screen.dart';
 import 'package:frontend/screens/member/member_dashboard_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -29,18 +29,18 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _signUp() async {
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Passwords do not match')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Passwords do not match')));
       return;
     }
 
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all fields')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please fill in all fields')));
       return;
     }
 
@@ -76,9 +76,9 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -86,9 +86,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _signIn() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all fields')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please fill in all fields')));
       return;
     }
 
@@ -115,18 +115,13 @@ class _AuthScreenState extends State<AuthScreen> {
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/admin-dashboard',
             (route) => false,
-            arguments: {
-              'token': token,
-              'user': userData,
-            },
+            arguments: {'token': token, 'user': userData},
           );
         } else if (userRole == 'Executive') {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (context) => ClubExecutiveDashboardScreen(
-          token: token,
-          user: userData,
-              ),
+              builder: (context) =>
+                  ClubExecutiveDashboardScreen(token: token, user: userData),
             ),
             (route) => false,
           );
@@ -135,17 +130,14 @@ class _AuthScreenState extends State<AuthScreen> {
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/member-dashboard',
             (route) => false,
-            arguments: {
-              'token': token,
-              'user': userData,
-            },
+            arguments: {'token': token, 'user': userData},
           );
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Welcome, ${data['user']['name']}!')),
         );
-        
+
         _emailController.clear();
         _passwordController.clear();
       } else {
@@ -155,9 +147,9 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -202,10 +194,7 @@ class _AuthScreenState extends State<AuthScreen> {
               Center(
                 child: Text(
                   _isSignUp ? 'Join our community' : 'Welcome back',
-                  style: TextStyle(
-                    color: Color(0xFF999999),
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Color(0xFF999999), fontSize: 14),
                 ),
               ),
               SizedBox(height: 48),
@@ -253,10 +242,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     },
                     child: Text(
                       'Forgot password?',
-                      style: TextStyle(
-                        color: Color(0xFF137FEC),
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Color(0xFF137FEC), fontSize: 12),
                     ),
                   ),
                 ),
@@ -284,8 +270,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                             strokeWidth: 2,
                           ),
                         )
@@ -309,10 +296,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     _isSignUp
                         ? 'Already have an account? '
                         : 'Don\'t have an account? ',
-                    style: TextStyle(
-                      color: Color(0xFF999999),
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: Color(0xFF999999), fontSize: 13),
                   ),
                   GestureDetector(
                     onTap: () {
