@@ -22,8 +22,8 @@ class ApiConfig {
     //   case TargetPlatform.linux:
     //   case TargetPlatform.windows:
     //   default:
-      return 'http://localhost:3000';
+      // return 'http://localhost:3000';
+    return 'https://campus-club-manager.onrender.com';
     // }
-    // return 'https://campus-club-manager.onrender.com';
   }
 }
