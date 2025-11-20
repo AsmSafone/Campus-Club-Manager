@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/config/api_config.dart';
-import 'package:frontend/screens/member/event_details_screen.dart';
+import 'package:frontend/screens/event_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class ClubEventsScreen extends StatefulWidget {
+class ExecutiveEventsScreen extends StatefulWidget {
   final String? token;
   final int? clubId;
 
-  const ClubEventsScreen({Key? key, this.token, this.clubId}) : super(key: key);
+  const ExecutiveEventsScreen({Key? key, this.token, this.clubId}) : super(key: key);
 
   @override
-  _ClubEventsScreenState createState() => _ClubEventsScreenState();
+  _ExecutiveEventsScreenState createState() => _ExecutiveEventsScreenState();
 }
 
-class _ClubEventsScreenState extends State<ClubEventsScreen> {
+class _ExecutiveEventsScreenState extends State<ExecutiveEventsScreen> {
   late Future<List<Map<String, dynamic>>> _eventsFuture;
   final String _apiBaseUrl = ApiConfig.baseUrl;
 
@@ -132,7 +132,7 @@ class _ClubEventsScreenState extends State<ClubEventsScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => 
-                      EventDetailsScreen(event: event, token: widget.token),
+                      EventDetailsScreen(event: event, token: widget.token, clubId: widget.clubId,),
                     ),
                     );
                   },

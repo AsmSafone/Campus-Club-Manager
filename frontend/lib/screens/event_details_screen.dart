@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../config/api_config.dart';
+import '../config/api_config.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> event;
   final String? token;
+  final int? clubId;
 
-  const EventDetailsScreen({super.key, required this.event, this.token});
+  const EventDetailsScreen({super.key, required this.event, required this.token, required this.clubId});
 
   @override
   State<EventDetailsScreen> createState() => _EventDetailsScreenState();
@@ -70,16 +71,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     setState(() => _registering = true);
     try {
       // Prefer club-scoped registration endpoint
-      final clubId = widget.event['club_id'] ?? widget.event['clubId'] ?? widget.event['clubId'];
+      // final clubId = widget.event['club_id'] ?? widget.event['clubId'] ?? widget.event['clubId'];
       final eventId = widget.event['event_id'] ?? widget.event['id'] ?? widget.event['eventId'];
-      Uri uri;
-      if (clubId != null && eventId != null) {
-        uri = Uri.parse('${ApiConfig.baseUrl}/api/clubs/$clubId/events/$eventId/register');
-      } else if (eventId != null) {
-        uri = Uri.parse('${ApiConfig.baseUrl}/api/events/$eventId/register');
-      } else {
-        throw Exception('Invalid event id');
+      if (eventId == null) {
+        throw Exception('Event ID not found');
       }
+      Uri uri = Uri.parse('${ApiConfig.baseUrl}/api/events/$eventId/register');
 
       final resp = await http.post(uri, headers: {
         'Authorization': 'Bearer ${widget.token}',

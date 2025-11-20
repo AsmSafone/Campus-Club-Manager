@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/member/club_details_screen.dart';
 import 'package:frontend/screens/member/club_list_screen.dart';
 import 'package:frontend/screens/member/my_event_list.dart';
-import 'package:frontend/screens/member/event_details_screen.dart';
+import 'package:frontend/screens/event_details_screen.dart';
 import 'package:frontend/screens/notification_view_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:frontend/screens/club_events_screen.dart';
+import 'package:frontend/screens/executive/executive_events_screen.dart';
 import 'package:frontend/screens/membership_status_management_screen.dart';
 import 'package:frontend/screens/user_profile_management_screen.dart';
 import 'package:intl/intl.dart';
@@ -23,12 +23,14 @@ class MemberDashboardScreen extends StatefulWidget {
 }
 
 class Event {
+  final int eventId;
   final String title;
   final String date;
   final String status;
   final int? attendees;
 
   Event({
+    required this.eventId,
     required this.title,
     required this.date,
     required this.status,
@@ -37,6 +39,7 @@ class Event {
 
   factory Event.fromMap(Map<String, dynamic> m) {
     return Event(
+      eventId: m['event_id'] is num ? (m['event_id'] as num).toInt() : int.tryParse('${m['event_id']}') ?? 0,
       title: (m['title'] ?? m['name'] ?? '').toString(),
       date: (m['date'] ?? '').toString(),
       status: ((m['status'] ?? 'RSVP').toString()),
@@ -169,7 +172,6 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
 
         final List<dynamic> list = json.decode(resp.body) as List<dynamic>;
         setState(() {
-          print(list);
           // If you want to show only events for the user's club, filter by _clubId
           events = list
               .map((e) => Event.fromMap(Map<String, dynamic>.from(e as Map)))
@@ -317,7 +319,9 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 16.0),
                   child: Row(
                     children: [
-                      ...events.map((event) => _buildEventCard(event)).toList(),
+                      ...events.map((event) {
+                            return _buildEventCard(event);
+                      }).toList(),
                       SizedBox(width: 8),
                     ],
                   ),
@@ -447,7 +451,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
             return;
           }
           print(index);
-          // Events: open ClubEventsScreen (requires clubId and token)
+          // Events: open MyEventList (requires clubId and token)
           if (index == 1) {
             await Navigator.of(context).push(
               MaterialPageRoute(
@@ -492,6 +496,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     final Map<String, dynamic> data = event is Map<String, dynamic>
         ? Map<String, dynamic>.from(event)
         : {
+            'event_id': event.eventId,
             'title': (event.title ?? '').toString(),
             'date': (event.date ?? '').toString(),
             'status': (event.status ?? '').toString(),
@@ -619,7 +624,6 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
       default:
         statusColor = Colors.blueGrey;
     }
-
     // Fields to show prominently (if present)
     final title = (data['title'] ?? data['name'] ?? '').toString();
     final rawDateVal = data['date'] ?? data['timestamp'] ?? data['time'] ?? data['start'] ?? data['datetime'] ?? data['dateTime'];
@@ -638,7 +642,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
         // Navigate to event details, pass the raw event map and token
         try {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => EventDetailsScreen(event: data, token: widget.token),
+            builder: (_) => EventDetailsScreen(event: data, token: widget.token, clubId: _clubId,),
           ));
         } catch (_) {}
       },
@@ -792,57 +796,6 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
-
-                if (additionalEntries.isNotEmpty) ...[
-                  SizedBox(height: 12),
-                  Divider(color: Colors.grey[800]),
-                  SizedBox(height: 8),
-                  // Additional fields as rows
-                  Column(
-                    children: additionalEntries.map((e) {
-                      final val = e.value;
-                      final display = val == null
-                          ? '—'
-                          : (val is String || val is num || val is bool)
-                              ? val.toString()
-                              : json.encode(val);
-                      final key = e.key;
-                      final icon = iconForKey[key.toLowerCase()] ?? Icons.info;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(icon, size: 16, color: Colors.grey[400]),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    prettyKey(key),
-                                    style: TextStyle(
-                                      color: Colors.grey[400],
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    display,
-                                    style: TextStyle(color: Colors.grey[300], fontSize: 12),
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
               ],
             ),
           ),

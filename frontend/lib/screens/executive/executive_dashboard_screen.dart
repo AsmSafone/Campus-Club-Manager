@@ -4,7 +4,7 @@ import 'package:frontend/screens/financial_overview_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend/config/api_config.dart';
 import 'dart:convert';
-import '../club_events_screen.dart';
+import 'executive_events_screen.dart';
 import '../finance_transactions_screen.dart';
 import '../club_executive_club_management_screen.dart';
 import '../notification_view_screen.dart';
@@ -553,12 +553,12 @@ class _ClubExecutiveDashboardScreenState
             // Navigate based on selected tab
             switch (index) {
               case 0:
-                // Events - navigate to ClubEventsScreen
+                // Events - navigate to ExecutiveEventsScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
-                        ClubEventsScreen(token: widget.token, clubId: _clubId),
+                        ExecutiveEventsScreen(token: widget.token, clubId: _clubId),
                   ),
                 );
                 break;
@@ -1359,7 +1359,7 @@ class _ClubExecutiveDashboardScreenState
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ClubEventsScreen(
+                        builder: (_) => ExecutiveEventsScreen(
                           token: widget.token,
                           clubId: _clubId,
                         ),

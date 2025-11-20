@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/member/event_details_screen.dart';
+import 'package:frontend/screens/event_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../config/api_config.dart';
@@ -163,7 +163,7 @@ class _MyEventListState extends State<MyEventList> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => EventDetailsScreen(event: event, token: widget.token),
+                          builder: (context) => EventDetailsScreen(event: event, token: widget.token, clubId: widget.clubId),
                         ),
                       );
                     },
