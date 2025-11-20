@@ -21,24 +21,24 @@ async function initializeDatabase() {
 
     try {
         // Read and execute SQL file
-        const sqlPath = path.join(__dirname, 'db.sql');
-        const sqlData = fs.readFileSync(sqlPath, 'utf8');
+        // const sqlPath = path.join(__dirname, 'db.sql');
+        // const sqlData = fs.readFileSync(sqlPath, 'utf8');
         
-        if (!sqlData) {
-            console.error('Error reading SQL file');
-            return;
-        }
+        // if (!sqlData) {
+        //     console.error('Error reading SQL file');
+        //     return;
+        // }
 
-        // Execute all statements at once
-        await initialConnection.query(sqlData);
+        // // Execute all statements at once
+        // await initialConnection.query(sqlData);
 
-        console.log('Database initialized successfully.');
-        await initialConnection.end();
+        // console.log('Database initialized successfully.');
+        // await initialConnection.end();
 
         // Now create the pool with the database specified
         pool = mysql.createPool({
             ...credentials,
-            database: process.env.DB_NAME || 'campus_club_management_db',
+            database: process.env.DB_NAME,
             waitForConnections: true,
             connectionLimit: 10,
             queueLimit: 0
