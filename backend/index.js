@@ -2,8 +2,11 @@ const express = require('express');
 const poolPromise = require('./db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
+// Enable CORS for browser clients. Adjust origin as needed for production.
+app.use(cors());
 app.use(express.json());
 
 // Sample route to test database connection
