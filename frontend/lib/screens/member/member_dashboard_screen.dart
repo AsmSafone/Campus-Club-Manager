@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:frontend/screens/club_events_screen.dart';
 import 'package:frontend/screens/membership_status_management_screen.dart';
 import 'package:frontend/screens/user_profile_management_screen.dart';
+import '../../config/api_config.dart';
 
 class MemberDashboardScreen extends StatefulWidget {
   final String? token;
@@ -73,7 +74,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
   String? _userEmail;
   int? _clubId;
   List<Map<String, dynamic>> _notifications = [];
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  // Api base URL
 
   @override
   void initState() {
@@ -102,7 +103,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
   Future<void> _fetchNotifications() async {
     if (widget.token == null) return;
     try {
-      final uri = Uri.parse('$_apiBaseUrl/api/notifications');
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/notifications');
       final resp = await http.get(
         uri,
         headers: {'Authorization': 'Bearer ${widget.token}'},
@@ -129,7 +130,7 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
   Future<void> _fetchEvents() async {
     if (widget.token == null) return;
     try {
-      final uri = Uri.parse('$_apiBaseUrl/api/users/me/upcoming-events');
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/users/me/upcoming-events');
       final resp = await http.get(
         uri,
         headers: {'Authorization': 'Bearer ${widget.token}'},

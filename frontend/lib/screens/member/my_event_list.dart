@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/member/event_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../config/api_config.dart';
 
 class MyEventList extends StatefulWidget {
   final String? token;
@@ -15,7 +16,7 @@ class MyEventList extends StatefulWidget {
 
 class _MyEventListState extends State<MyEventList> {
   late Future<List<Map<String, dynamic>>> _eventsFuture;
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  // Api base URL from ApiConfig
   
   @override
   void initState() {
@@ -31,7 +32,7 @@ class _MyEventListState extends State<MyEventList> {
       };
 
       final response = await http.get(
-        Uri.parse('$_apiBaseUrl/api/users/me/events'),
+        Uri.parse('${ApiConfig.baseUrl}/api/users/me/events'),
         headers: headers,
       );
 

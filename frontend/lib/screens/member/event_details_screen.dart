@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../config/api_config.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> event;
@@ -17,7 +18,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _registered = false;
   int _attendees = 0;
 
-  final String _apiBase = 'http://10.0.2.2:3000';
+  // Api base URL
 
   @override
   void initState() {
@@ -39,7 +40,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       final eventId = widget.event['event_id'] ?? widget.event['id'] ?? widget.event['eventId'];
       if (clubId == null || eventId == null) return;
 
-      final uri = Uri.parse('$_apiBase/api/clubs/$clubId/events/$eventId/registration');
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/clubs/$clubId/events/$eventId/registration');
       final resp = await http.get(uri, headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json'
@@ -73,9 +74,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       final eventId = widget.event['event_id'] ?? widget.event['id'] ?? widget.event['eventId'];
       Uri uri;
       if (clubId != null && eventId != null) {
-        uri = Uri.parse('$_apiBase/api/clubs/$clubId/events/$eventId/register');
+        uri = Uri.parse('${ApiConfig.baseUrl}/api/clubs/$clubId/events/$eventId/register');
       } else if (eventId != null) {
-        uri = Uri.parse('$_apiBase/api/events/$eventId/register');
+        uri = Uri.parse('${ApiConfig.baseUrl}/api/events/$eventId/register');
       } else {
         throw Exception('Invalid event id');
       }

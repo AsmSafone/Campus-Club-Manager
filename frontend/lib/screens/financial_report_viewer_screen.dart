@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_config.dart';
 
 class FinancialReportViewerScreen extends StatefulWidget {
   final String? token;
@@ -16,7 +17,7 @@ class _FinancialReportViewerScreenState extends State<FinancialReportViewerScree
   
   List<FinancialReport> _reports = [];
   late Future<void> _loadFuture;
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  // Api base URL provided by ApiConfig
 
   @override
   void dispose() {
@@ -36,7 +37,7 @@ class _FinancialReportViewerScreenState extends State<FinancialReportViewerScree
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
       };
-      final uri = Uri.parse('$_apiBaseUrl/api/clubs/${widget.clubId}/finance');
+      final uri = Uri.parse('${ApiConfig.baseUrl}/api/clubs/${widget.clubId}/finance');
       final response = await http.get(uri, headers: headers);
       if (response.statusCode == 200) {
         print(response.body);

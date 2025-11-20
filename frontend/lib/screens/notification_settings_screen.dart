@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_config.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   final String? token;
@@ -19,7 +20,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   bool _rsvpEventReminders = true;
   String _reminderTime = '2 hours before';
   bool _isLoading = true;
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  // use ApiConfig.baseUrl
 
   @override
   void initState() {
@@ -42,7 +43,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       };
 
       final response = await http.get(
-        Uri.parse('$_apiBaseUrl/api/notifications/settings'),
+        Uri.parse('${ApiConfig.baseUrl}/api/notifications/settings'),
         headers: headers,
       );
 
@@ -90,7 +91,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       });
 
       final response = await http.put(
-        Uri.parse('$_apiBaseUrl/api/notifications/settings'),
+        Uri.parse('${ApiConfig.baseUrl}/api/notifications/settings'),
         headers: headers,
         body: body,
       );

@@ -3,6 +3,7 @@ import 'package:frontend/screens/executive/executive_dashboard_screen.dart';
 import 'package:frontend/screens/member/member_dashboard_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../config/api_config.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -48,8 +49,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       final response = await http.post(
-        // Uri.parse('http://localhost:3000/api/auth/signup'),
-        Uri.parse('http://10.0.2.2:3000/api/auth/signup'),
+        Uri.parse('${ApiConfig.baseUrl}/api/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': _nameController.text,
@@ -96,7 +96,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/api/auth/signin'),
+        Uri.parse('${ApiConfig.baseUrl}/api/auth/signin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': _emailController.text,

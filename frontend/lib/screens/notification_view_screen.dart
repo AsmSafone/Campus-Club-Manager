@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'notification_settings_screen.dart';
 import 'package:intl/intl.dart';
+import '../config/api_config.dart';
 
 class Notification {
   final String id;
@@ -105,8 +106,8 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
         'Content-Type': 'application/json',
       };
 
-      final response = await http.get(
-        Uri.parse('$_apiBaseUrl/api/notifications'),
+        final response = await http.get(
+          Uri.parse('${ApiConfig.baseUrl}/api/notifications'),
         headers: headers,
       );
 

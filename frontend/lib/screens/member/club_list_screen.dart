@@ -3,6 +3,7 @@ import 'package:frontend/screens/club_executive_club_management_screen.dart';
 import 'package:frontend/screens/member/club_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../config/api_config.dart';
 
 class ClubListScreen extends StatefulWidget {
   final String? token;
@@ -14,7 +15,7 @@ class ClubListScreen extends StatefulWidget {
 
 class _ClubListScreenState extends State<ClubListScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final String _apiBase = 'http://10.0.2.2:3000';
+  // Api base URL
   
   late Future<List<Club>> _clubsFuture;
   List<Club> _allClubs = [];
@@ -39,7 +40,7 @@ class _ClubListScreenState extends State<ClubListScreen> {
   Future<List<Club>> _fetchClubs() async {
     if (widget.token == null) return [];
     try {
-      final resp = await http.get(Uri.parse('$_apiBase/api/clubs/list'), headers: {
+      final resp = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/clubs/list'), headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
       });
@@ -381,7 +382,7 @@ class _ClubListScreenState extends State<ClubListScreen> {
     if (widget.token == null) return;
     setState(() => _isLoading = true);
     try {
-      final endpoint = '${_apiBase}/api/clubs/${club.id}/approve';
+      final endpoint = '${ApiConfig.baseUrl}/api/clubs/${club.id}/approve';
       final resp = await http.post(Uri.parse(endpoint), headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
@@ -403,7 +404,7 @@ class _ClubListScreenState extends State<ClubListScreen> {
     if (widget.token == null) return;
     setState(() => _isLoading = true);
     try {
-      final endpoint = '${_apiBase}/api/clubs/${club.id}/suspend';
+      final endpoint = '${ApiConfig.baseUrl}/api/clubs/${club.id}/suspend';
       final resp = await http.post(Uri.parse(endpoint), headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',

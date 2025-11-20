@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_config.dart';
 
 class UserProfileManagementScreen extends StatefulWidget {
   final String? token;
@@ -22,7 +23,7 @@ class _UserProfileManagementScreenState extends State<UserProfileManagementScree
   int? _userId;
   int? _clubId;
   String _roleLabel = '';
-  final String _apiBase = 'http://10.0.2.2:3000';
+  // Use central ApiConfig for platform-aware base URL
   final TextEditingController _nameCtl = TextEditingController();
   final TextEditingController _emailCtl = TextEditingController();
   final TextEditingController _phoneCtl = TextEditingController();
@@ -66,7 +67,7 @@ class _UserProfileManagementScreenState extends State<UserProfileManagementScree
   Future<void> _loadNotificationSettings() async {
     if (widget.token == null) return;
     try {
-      final resp = await http.get(Uri.parse('$_apiBase/api/notifications/settings'), headers: {
+      final resp = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/notifications/settings'), headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
       });
@@ -93,7 +94,7 @@ class _UserProfileManagementScreenState extends State<UserProfileManagementScree
         'email': _emailNotifications,
         'push': _pushNotifications,
       });
-      final resp = await http.put(Uri.parse('$_apiBase/api/notifications/settings'), headers: {
+      final resp = await http.put(Uri.parse('${ApiConfig.baseUrl}/api/notifications/settings'), headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
       }, body: body);
@@ -112,7 +113,7 @@ class _UserProfileManagementScreenState extends State<UserProfileManagementScree
   Future<void> _loadRoleLabel() async {
     if (widget.token == null || _clubId == null || _userId == null) return;
     try {
-      final resp = await http.get(Uri.parse('$_apiBase/api/clubs/$_clubId/members'), headers: {
+      final resp = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/clubs/$_clubId/members'), headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
       });
@@ -521,7 +522,7 @@ class _UserProfileManagementScreenState extends State<UserProfileManagementScree
         'phone': _phoneCtl.text,
         'major': _majorCtl.text,
       };
-      final endpoint = _userId != null ? '$_apiBase/api/users/$_userId' : '$_apiBase/api/profile';
+      final endpoint = _userId != null ? '${ApiConfig.baseUrl}/api/users/$_userId' : '${ApiConfig.baseUrl}/api/profile';
       final resp = await http.put(Uri.parse(endpoint), headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',

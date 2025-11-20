@@ -6,12 +6,16 @@ require('dotenv').config();
 
 let pool;
 
+const credentials = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+};
+
 async function initializeDatabase() {
     // First, create a connection without specifying the database
     const initialConnection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
+        ...credentials,
         multipleStatements: true
     });
 
@@ -33,10 +37,8 @@ async function initializeDatabase() {
 
         // Now create the pool with the database specified
         pool = mysql.createPool({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
+            ...credentials,
+            database: process.env.DB_NAME || 'campus_club_management_db',
             waitForConnections: true,
             connectionLimit: 10,
             queueLimit: 0
