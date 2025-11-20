@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:frontend/config/api_config.dart';
 
 class AdminClubDetailsScreen extends StatefulWidget {
   final String token;
@@ -108,7 +109,7 @@ class _AdminClubDetailsScreenState extends State<AdminClubDetailsScreen> {
       }
     }
   final TextEditingController _searchController = TextEditingController();
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
 
   Map<String, dynamic>? _clubDetails;
   List<Member> _members = [];
@@ -261,7 +262,7 @@ class _AdminClubDetailsScreenState extends State<AdminClubDetailsScreen> {
         }
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Role updated successfully')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update role')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update role')));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/config/api_config.dart';
 import 'package:frontend/screens/admin/admin_club_details_screen.dart';
 // import 'package:frontend/screens/admin/admin_user_role_assignment_screen.dart';
 // import 'package:frontend/screens/admin/club_management_for_admins_screen.dart';
@@ -37,7 +38,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String? _errorMessage;
 
   // final String _apiBaseUrl = 'http://localhost:3000';
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
 
   @override
   void initState() {
@@ -436,6 +437,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         title: const Text('Admin Dashboard'),
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadDashboardData,
+            tooltip: 'Refresh',
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {

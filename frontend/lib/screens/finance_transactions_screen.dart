@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -16,7 +17,7 @@ class FinanceTransactionsScreen extends StatefulWidget {
 
 class _FinanceTransactionsScreenState extends State<FinanceTransactionsScreen> {
   late Future<Map<String, dynamic>> _financeFuture;
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
 
   @override
   void initState() {

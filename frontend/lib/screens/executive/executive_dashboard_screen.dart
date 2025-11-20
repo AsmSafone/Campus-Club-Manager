@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/executive/club_detail_screen.dart';
 import 'package:frontend/screens/financial_overview_screen.dart';
 import 'package:http/http.dart' as http;
+import 'package:frontend/config/api_config.dart';
 import 'dart:convert';
 import '../club_events_screen.dart';
 import '../finance_transactions_screen.dart';
@@ -23,7 +24,7 @@ class ClubExecutiveDashboardScreen extends StatefulWidget {
 class _ClubExecutiveDashboardScreenState
     extends State<ClubExecutiveDashboardScreen> {
   int _selectedBottomNavIndex = 0;
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
 
   Map<String, dynamic>? _clubDetails;
   Map<String, dynamic>? _financeData;

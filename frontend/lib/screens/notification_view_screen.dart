@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'notification_settings_screen.dart';
 import 'package:intl/intl.dart';
-import '../config/api_config.dart';
+// consolidated import above
 
 class Notification {
   final String id;
@@ -68,7 +69,7 @@ class NotificationViewScreen extends StatefulWidget {
 class _NotificationViewScreenState extends State<NotificationViewScreen> {
   late Future<List<Notification>> _notificationsFuture;
   List<Notification> _notifications = [];
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
 
   @override
   void initState() {

@@ -169,35 +169,47 @@ app.get('/api/clubs/list', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;
         const { search, sort } = req.query;
-        const whereClauses = [];
-        const params = [];
-        if (search) {
-            whereClauses.push('c.name LIKE ?');
-            params.push(`%${search}%`);
-        }
-        const whereSql = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
-        const orderSql = (sort === 'newest') ? 'ORDER BY c.founded_date DESC' : 'ORDER BY c.name ASC';
+        const userId = req.user?.userId || req.user?.user_id || null;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        // Get clubs which have no membership for this user
         const [clubs] = await pool.query(`
             SELECT 
-                c.club_id,
-                c.name,
-                c.description,
-                c.founded_date,
-                COUNT(m.membership_id) as members_count
+            c.club_id, 
+            c.name, 
+            c.description, 
+            c.founded_date, 
+            (SELECT COUNT(*) FROM Membership m2 WHERE m2.club_id = c.club_id) as members_count
             FROM Club c
-            LEFT JOIN Membership m ON c.club_id = m.club_id
-            ${whereSql}
-            GROUP BY c.club_id, c.name, c.description, c.founded_date
-            ${orderSql}
-        `, params);
-        const clubsWithStatus = clubs.map(c => ({
-            ...c,
-            status: c.members_count === 0 ? 'Pending' : 'Approved'
-        }));
-        res.json(clubsWithStatus);
+            LEFT JOIN Membership m ON c.club_id = m.club_id AND m.user_id = ?
+            WHERE m.membership_id IS NULL
+            ORDER BY c.founded_date ASC
+        `, [userId]);
+
+        res.json(clubs);
     } catch (err) {
         console.error('Get clubs error:', err);
         res.status(500).json({ error: 'Failed to fetch clubs' });
+    }
+});
+
+// Get all clubs the current user is a member of
+app.get('/api/users/me/clubs', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const userId = req.user?.userId || req.user?.user_id || null;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+        const [clubs] = await pool.query(`
+            SELECT c.club_id, c.name, c.description, c.founded_date, (SELECT COUNT(*) FROM Membership m2 WHERE m2.club_id = c.club_id) as members_count
+            FROM Club c 
+            JOIN Membership m ON c.club_id = m.club_id
+            WHERE m.user_id = ?
+            ORDER BY c.name ASC
+        `, [userId]);
+        res.json(clubs);
+    } catch (err) {
+        console.error('Get my clubs error:', err);
+        res.status(500).json({ error: 'Failed to fetch user clubs' });
     }
 });
 
@@ -381,31 +393,30 @@ app.get('/api/users/me/upcoming-events', verifyToken, async (req, res) => {
         const userId = req.user?.userId || req.user?.user_id || null;
         if (!userId) return res.status(401).json({ message: 'Invalid user' });
 
-        const [events] = await pool.query(`
-            SELECT 
-                e.event_id,
-                e.title,
-                e.description,
-                e.date,
-                e.venue,
-                e.club_id,
-                c.name as club_name,
-                (SELECT COUNT(*) FROM Registration r WHERE r.event_id = e.event_id) as attendees,
-                (SELECT COUNT(*) FROM Registration r WHERE r.event_id = e.event_id AND r.user_id = ?) as is_registered
-            FROM Event e
-            JOIN Club c ON e.club_id = c.club_id
-            WHERE e.club_id IN (SELECT club_id FROM Membership WHERE user_id = ?)
-              AND e.date >= CURDATE()
-            ORDER BY e.date ASC
-        `, [userId, userId]);
+        const [events] = await pool.query(`SELECT e.event_id,
+       e.title,
+       e.description,
+       e.date,
+       e.venue,
+       c.name AS club_name
+FROM Event e
+JOIN Club c ON e.club_id = c.club_id
+JOIN Membership m ON m.club_id = e.club_id
+WHERE m.user_id = ?
+  AND e.date >= CURDATE()
+  AND e.date = (
+      SELECT MIN(e2.date)
+      FROM Event e2
+      WHERE e2.club_id = e.club_id
+        AND e2.date >= CURDATE()
+  )
+ORDER BY e.date ASC;
+;
+        `, [userId]);
 
-        // normalize is_registered to boolean
-        const mapped = events.map(ev => ({
-            ...ev,
-            is_registered: (ev.is_registered && ev.is_registered > 0) ? true : false
-        }));
-
-        res.json(mapped);
+        console.log(events);
+        
+        res.json(events);
     } catch (err) {
         console.error('Get my upcoming events error:', err);
         res.status(500).json({ error: 'Failed to fetch user upcoming events' });
@@ -589,11 +600,29 @@ app.put('/api/clubs/:clubId/members/:membershipId', verifyToken, async (req, res
         if (membership.length === 0) {
             return res.status(404).json({ message: 'Membership not found' });
         }
+
+        // Check for existing executive roles
+        const [memberDetails] = await pool.query(
+            'SELECT user_id FROM Membership WHERE membership_id = ?',
+            [membershipId]
+        );
+        const userId = memberDetails[0].user_id;
+        const [already_executive] = await pool.query(
+            'SELECT * FROM User WHERE user_id = ?',
+            [userId]
+        );
+        if (role !== "Member" && already_executive[0].role !== 'Member') {
+            return res.status(400).json({ message: 'User already holds an executive role in another club' });
+        }
         
         // Update role
         await pool.query(
             'UPDATE Membership SET role = ? WHERE membership_id = ?',
             [role, membershipId]
+        );
+        await pool.query(
+            'UPDATE User SET role = ? WHERE user_id = ?',
+            [role!="Member" ? "Executive" : "Member", userId]
         );
         
         res.json({ message: 'Member role updated successfully' });
@@ -839,6 +868,28 @@ app.get('/api/notifications', verifyToken, async (req, res) => {
     }
 });
 
+// Get latest notification for a specific club (member only)
+app.get('/api/clubs/:clubId/notifications/latest', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { clubId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        // Check membership - only members may view club notifications
+        const [rows] = await pool.query('SELECT * from Notification where club_id in (select club_id from Membership where user_id = ? group by club_id)', [userId]);
+        
+        if (rows.length === 0) {
+            return res.status(204).json({});
+        }
+
+        res.json(rows);
+    } catch (err) {
+        console.error('Get latest club notification error:', err);
+        res.status(500).json({ error: 'Failed to fetch latest notification' });
+    }
+});
+
 // Get notification settings for a user
 app.get('/api/notifications/settings', verifyToken, async (req, res) => {
     try {
@@ -1046,11 +1097,7 @@ app.post('/api/clubs/:clubId/leave', verifyToken, async (req, res) => {
 
         if (!userId) return res.status(401).json({ message: 'Invalid user' });
 
-        // Find membership
-        const [membership] = await pool.query('SELECT membership_id FROM Membership WHERE club_id = ? AND user_id = ?', [clubId, userId]);
-        if (membership.length === 0) return res.status(400).json({ message: 'Not a member' });
-
-        await pool.query('DELETE FROM Membership WHERE membership_id = ?', [membership[0].membership_id]);
+        await pool.query('DELETE FROM Membership WHERE club_id = ? and user_id = ?', [clubId, userId]);
         res.json({ message: 'Left club successfully' });
     } catch (err) {
         console.error('Leave club error:', err);

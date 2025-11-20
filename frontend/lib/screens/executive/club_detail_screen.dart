@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -14,7 +15,7 @@ class ClubDetailScreen extends StatefulWidget {
 
 class _ClubDetailState extends State<ClubDetailScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
 
   List<Member> _members = [];
   List<Member> _filteredMembers = [];

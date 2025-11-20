@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'club_list_screen.dart';
@@ -20,7 +21,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
   bool _loading = false;
   bool _isMember = false;
   bool _actionLoading = false;
-  final String _apiBase = 'http://10.0.2.2:3000';
+  final String _apiBase = ApiConfig.baseUrl;
 
   @override
   void initState() {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/config/api_config.dart';
 import 'package:frontend/screens/financial_report_generation_screen.dart';
 import 'package:frontend/screens/financial_report_viewer_screen.dart';
 import 'package:http/http.dart' as http;
@@ -16,7 +17,7 @@ class FinancialOverviewScreen extends StatefulWidget {
 
 class _FinancialOverviewScreenState extends State<FinancialOverviewScreen> {
   late Future<Map<String, dynamic>> _financeFuture;
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
   final double _chartMaxHeight = 120; // px for chart scaling
 
   @override

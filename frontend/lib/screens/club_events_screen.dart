@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/config/api_config.dart';
 import 'package:frontend/screens/member/event_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -15,7 +16,7 @@ class ClubEventsScreen extends StatefulWidget {
 
 class _ClubEventsScreenState extends State<ClubEventsScreen> {
   late Future<List<Map<String, dynamic>>> _eventsFuture;
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
 
   @override
   void initState() {

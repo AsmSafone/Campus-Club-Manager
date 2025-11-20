@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
@@ -31,7 +32,7 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
   List<Map<String, dynamic>> _generatedRecords = [];
   String? _errorMessage;
 
-  final String _apiBaseUrl = 'http://10.0.2.2:3000';
+  final String _apiBaseUrl = ApiConfig.baseUrl;
 
   @override
   void initState() {
