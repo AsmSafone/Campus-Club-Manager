@@ -601,28 +601,39 @@ app.put('/api/clubs/:clubId/members/:membershipId', verifyToken, async (req, res
             return res.status(404).json({ message: 'Membership not found' });
         }
 
-        // Check for existing executive roles
+        // Get the user id for this membership
         const [memberDetails] = await pool.query(
             'SELECT user_id FROM Membership WHERE membership_id = ?',
             [membershipId]
         );
         const userId = memberDetails[0].user_id;
-        const [already_executive] = await pool.query(
-            'SELECT * FROM User WHERE user_id = ?',
-            [userId]
+
+        // Check whether the user holds an executive role in a different club
+        // Allow changing executive roles within the same club, but disallow becoming executive if already executive in another club
+        const [otherExecutiveMemberships] = await pool.query(
+            'SELECT membership_id FROM Membership WHERE user_id = ? AND role != ? AND club_id != ?',
+            [userId, 'Member', clubId]
         );
-        if (role !== "Member" && already_executive[0].role !== 'Member') {
+        if (role !== 'Member' && otherExecutiveMemberships.length > 0) {
             return res.status(400).json({ message: 'User already holds an executive role in another club' });
         }
         
-        // Update role
+        // Update membership role
         await pool.query(
             'UPDATE Membership SET role = ? WHERE membership_id = ?',
             [role, membershipId]
         );
+
+        // Recalculate user's global role: if they have any executive memberships remain, set to Executive, otherwise Member
+        const [execCountRows] = await pool.query(
+            'SELECT COUNT(*) as cnt FROM Membership WHERE user_id = ? AND role != ?',
+            [userId, 'Member']
+        );
+        const execCount = execCountRows[0].cnt || 0;
+        const newUserRole = execCount > 0 ? 'Executive' : 'Member';
         await pool.query(
             'UPDATE User SET role = ? WHERE user_id = ?',
-            [role!="Member" ? "Executive" : "Member", userId]
+            [newUserRole, userId]
         );
         
         res.json({ message: 'Member role updated successfully' });
