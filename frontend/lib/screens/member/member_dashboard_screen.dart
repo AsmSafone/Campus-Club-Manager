@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/member/club_details_screen.dart';
-import 'package:frontend/screens/member/club_list_screen.dart';
-import 'package:frontend/screens/member/my_event_list.dart';
-import 'package:frontend/screens/event_details_screen.dart';
-import 'package:frontend/screens/notification_view_screen.dart';
+import 'package:campus_club_manager/screens/member/club_details_screen.dart';
+import 'package:campus_club_manager/screens/member/club_list_screen.dart';
+import 'package:campus_club_manager/screens/member/my_event_list.dart';
+import 'package:campus_club_manager/screens/event_details_screen.dart';
+import 'package:campus_club_manager/screens/notification_view_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:frontend/screens/executive/executive_events_screen.dart';
-import 'package:frontend/screens/membership_status_management_screen.dart';
-import 'package:frontend/screens/user_profile_management_screen.dart';
+import 'package:campus_club_manager/screens/executive/executive_events_screen.dart';
+import 'package:campus_club_manager/screens/membership_status_management_screen.dart';
+import 'package:campus_club_manager/screens/user_profile_management_screen.dart';
 import 'package:intl/intl.dart';
 import '../../config/api_config.dart';
+import 'package:campus_club_manager/utils/auth_utils.dart';
 
 class MemberDashboardScreen extends StatefulWidget {
   final String? token;
@@ -250,12 +251,9 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                               ),
                           IconButton(
                             icon: const Icon(Icons.logout, color: Colors.white),
-                            onPressed: () {
-                              Navigator.of(context).pushNamedAndRemoveUntil(
-                                '/auth',
-                                (route) => false,
-                              );
-                            },
+                              onPressed: () async {
+                                await signOutAndNavigate(context);
+                              },
                             tooltip: 'Logout',
                           ),
                         ],
@@ -432,6 +430,39 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                       }).toList(),
                     ],
                   ),
+                )
+                else Column(
+                  
+                  children: [
+                    Text(
+                    'You are not a member of any clubs yet.',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.center,
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.group_add, color: Colors.white),
+                      label: Text('Join a Club', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF137FEC),
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ClubListScreen(token: widget.token, clubId: _clubId),
+                          ),
+                        );
+                        await _loadDashboard();
+                      },
+                    ),
+                  ),
+                  ],
                 ),
               ],
             ),

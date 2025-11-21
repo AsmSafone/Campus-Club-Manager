@@ -13,6 +13,9 @@ import 'screens/user_profile_management_screen.dart';
 import 'screens/notification_view_screen.dart';
 import 'screens/membership_status_management_screen.dart';
 import 'screens/auth/auth_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'utils/auth_utils.dart';
 
 void main() {
   runApp(const MyApp());
@@ -37,11 +40,11 @@ class MyApp extends StatelessWidget {
           elevation: 1,
         ),
       ),
-      home: AuthScreen(),
+      home: Startup(),
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/auth':
-            return MaterialPageRoute(builder: (context) => AuthScreen());
+            return MaterialPageRoute(builder: (context) => AuthEntry());
           case '/home':
             return MaterialPageRoute(
               builder: (context) =>
@@ -76,6 +79,85 @@ class MyApp extends StatelessWidget {
         }
       },
     );
+  }
+}
+
+/// Startup widget that restores saved auth (if any) and navigates to the right dashboard.
+class Startup extends StatefulWidget {
+  @override
+  _StartupState createState() => _StartupState();
+}
+
+class _StartupState extends State<Startup> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      final userJson = prefs.getString('auth_user');
+      if (token != null && token.isNotEmpty && userJson != null) {
+        final user = jsonDecode(userJson) as Map<String, dynamic>;
+        final role = (user['role'] ?? '').toString();
+        // navigate to appropriate dashboard
+        if (role == 'Admin') {
+          Navigator.of(context).pushReplacementNamed('/admin-dashboard', arguments: {'token': token, 'user': user});
+          return;
+        }
+        if (role == 'Executive') {
+          Navigator.of(context).pushReplacementNamed('/executive-dashboard', arguments: {'token': token, 'user': user});
+          return;
+        }
+        // default to member
+        Navigator.of(context).pushReplacementNamed('/member-dashboard', arguments: {'token': token, 'user': user});
+        return;
+      }
+    } catch (_) {}
+
+    // No saved auth — go to AuthScreen
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => AuthScreen()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// When navigating to `/auth`, clear stored credentials then show AuthScreen.
+class AuthEntry extends StatefulWidget {
+  @override
+  _AuthEntryState createState() => _AuthEntryState();
+}
+
+class _AuthEntryState extends State<AuthEntry> {
+  bool _cleared = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _clearAndShow();
+  }
+
+  Future<void> _clearAndShow() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('auth_user');
+    } catch (_) {}
+    setState(() => _cleared = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_cleared) return Scaffold(body: Center(child: CircularProgressIndicator()));
+    return AuthScreen();
   }
 }
 
@@ -172,10 +254,9 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil('/auth', (route) => false);
+            onPressed: () async {
+              // Use centralized sign-out helper to clear prefs and navigate
+              await signOutAndNavigate(context);
             },
           ),
         ],

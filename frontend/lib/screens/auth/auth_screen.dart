@@ -1,8 +1,8 @@
+import 'package:campus_club_manager/screens/executive/executive_dashboard_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/executive/executive_dashboard_screen.dart';
-import 'package:frontend/screens/member/member_dashboard_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/api_config.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -109,6 +109,13 @@ class _AuthScreenState extends State<AuthScreen> {
         final userRole = data['user']['role'];
         final token = data['token'];
         final userData = data['user'];
+
+        // Persist auth token and user for app restart
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          if (token != null) await prefs.setString('auth_token', token.toString());
+          if (userData != null) await prefs.setString('auth_user', jsonEncode(userData));
+        } catch (_) {}
 
         // Navigate to the appropriate dashboard based on role
         if (userRole == 'Admin') {

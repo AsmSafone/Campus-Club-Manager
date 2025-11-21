@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/config/api_config.dart';
-import 'package:frontend/screens/financial_report_generation_screen.dart';
-import 'package:frontend/screens/financial_report_viewer_screen.dart';
+import 'package:campus_club_manager/config/api_config.dart';
+import 'package:campus_club_manager/screens/financial_report_generation_screen.dart';
+import 'package:campus_club_manager/screens/financial_report_viewer_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';

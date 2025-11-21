@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/config/api_config.dart';
+import 'package:campus_club_manager/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'club_list_screen.dart';

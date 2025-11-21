@@ -1,6 +1,6 @@
 -- CREATE DATABASE IF NOT EXISTS campus_club_management_db;
-USE sql12808718;
--- USE campus_club_management_db;
+-- USE sql12808718;
+USE campus_club_management_db;
 
 CREATE TABLE IF NOT EXISTS User (
     user_id INT AUTO_INCREMENT PRIMARY KEY,

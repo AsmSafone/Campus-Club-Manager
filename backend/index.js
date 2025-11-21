@@ -291,6 +291,33 @@ app.post('/api/clubs', verifyToken, async (req, res) => {
     }
 });
 
+// Delete club
+app.delete('/api/clubs/:clubId', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { clubId } = req.params;
+        // Check if club exists
+        const [clubExists] = await pool.query('SELECT club_id FROM Club WHERE club_id = ?', [clubId]);
+        if (clubExists.length === 0) {
+            return res.status(404).json({ message: 'Club not found' });
+        }
+        // demote executives of this club
+        await pool.query(`
+            UPDATE User u
+            JOIN Membership m ON u.user_id = m.user_id
+            SET u.role = 'Member'
+            WHERE m.club_id = ? AND m.role IN ('President', 'Secretary', 'Treasurer')
+        `, [clubId]);
+
+        // Delete the club (cascades to membership, events, registrations)
+        await pool.query('DELETE FROM Club WHERE club_id = ?', [clubId]);
+        return res.json({ message: 'Club deleted successfully' });
+    } catch (err) {
+        console.error('Delete club error:', err);
+        return res.status(500).json({ error: 'Failed to delete club' });
+    }
+});
+
 // Get club details (for admin/anyone)
 app.get('/api/clubs/:clubId', verifyToken, async (req, res) => {
     try {
@@ -318,6 +345,7 @@ app.get('/api/clubs/:clubId', verifyToken, async (req, res) => {
     }
 });
 
+// update club details
 app.put('/api/clubs/:clubId', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;

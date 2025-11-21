@@ -1,4 +1,4 @@
-name: frontend
+name: campus_club_manager
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -38,6 +38,8 @@ dependencies:
   shared_preferences: ^2.1.5
   path_provider: ^2.0.14
   intl: ^0.18.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +54,19 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+flutter_launcher_icons:
+  android: true
+  ios: true
+  web: true
+  image_path: "assets/icons/icon.jpg"
+flutter_native_splash:
+  color: "#000000"     # background color
+  image: assets/icons/icon.jpg
+  android: true
+  android_12:
+    image: assets/icons/icon.jpg
+    icon_background_color: "#000000"
+
 
 # The following section is specific to Flutter packages.
 flutter:

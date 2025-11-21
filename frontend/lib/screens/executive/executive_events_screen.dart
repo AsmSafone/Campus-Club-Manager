@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/config/api_config.dart';
-import 'package:frontend/screens/event_details_screen.dart';
+import 'package:campus_club_manager/config/api_config.dart';
+import 'package:campus_club_manager/screens/event_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 

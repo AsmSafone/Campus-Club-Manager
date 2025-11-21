@@ -1,8 +1,9 @@
+import 'package:campus_club_manager/config/api_config.dart';
+import 'package:campus_club_manager/utils/auth_utils.dart';
+import 'package:campus_club_manager/screens/admin/admin_club_details_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/config/api_config.dart';
-import 'package:frontend/screens/admin/admin_club_details_screen.dart';
-// import 'package:frontend/screens/admin/admin_user_role_assignment_screen.dart';
-// import 'package:frontend/screens/admin/club_management_for_admins_screen.dart';
+// import 'package:campus_club_manager/screens/admin/admin_user_role_assignment_screen.dart';
+// import 'package:campus_club_manager/screens/admin/club_management_for_admins_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -444,10 +445,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil('/auth', (route) => false);
+            onPressed: () async {
+              await signOutAndNavigate(context);
             },
             tooltip: 'Logout',
           ),

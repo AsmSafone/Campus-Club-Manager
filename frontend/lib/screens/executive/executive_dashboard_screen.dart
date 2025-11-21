@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/executive/club_detail_screen.dart';
-import 'package:frontend/screens/financial_overview_screen.dart';
+import 'package:campus_club_manager/screens/executive/club_detail_screen.dart';
+import 'package:campus_club_manager/utils/auth_utils.dart';
+import 'package:campus_club_manager/screens/financial_overview_screen.dart';
 import 'package:http/http.dart' as http;
-import 'package:frontend/config/api_config.dart';
+import 'package:campus_club_manager/config/api_config.dart';
 import 'dart:convert';
 import 'executive_events_screen.dart';
 import '../finance_transactions_screen.dart';
@@ -288,10 +289,8 @@ class _ClubExecutiveDashboardScreenState
                     // Logout button
                     IconButton(
                       icon: const Icon(Icons.logout, color: Colors.white),
-                      onPressed: () {
-                        Navigator.of(
-                          context,
-                        ).pushNamedAndRemoveUntil('/auth', (route) => false);
+                      onPressed: () async {
+                        await signOutAndNavigate(context);
                       },
                       tooltip: 'Logout',
                     ),
