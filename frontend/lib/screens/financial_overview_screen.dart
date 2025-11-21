@@ -19,6 +19,7 @@ class _FinancialOverviewScreenState extends State<FinancialOverviewScreen> {
   late Future<Map<String, dynamic>> _financeFuture;
   final String _apiBaseUrl = ApiConfig.baseUrl;
   final double _chartMaxHeight = 120; // px for chart scaling
+  String _chartPeriod = 'month';
 
   @override
   void initState() {
@@ -64,9 +65,21 @@ class _FinancialOverviewScreenState extends State<FinancialOverviewScreen> {
     }
   }
 
-  // Compute income/expense totals for last 4 weeks (index 0 = current week)
-  List<Map<String, double>> _computeWeeklyData(List records) {
-    final now = DateTime.now();
+  DateTime _latestRecordDate(List records) {
+    DateTime latest = DateTime.now();
+    for (var rec in records) {
+      try {
+        final rawDate = rec['date']?.toString();
+        if (rawDate == null) continue;
+        final dt = DateTime.parse(rawDate).toLocal();
+        if (dt.isAfter(latest)) latest = dt;
+      } catch (_) {}
+    }
+    return latest;
+  }
+
+  List<Map<String, double>> _computeWeeklyData(List records, DateTime endDate) {
+    final now = endDate;
     // initialize 4 week buckets
     final weeks = List.generate(4, (_) => {'income': 0.0, 'expense': 0.0});
 
@@ -95,6 +108,29 @@ class _FinancialOverviewScreenState extends State<FinancialOverviewScreen> {
 
     // Return reversed so chart shows older -> newer left->right
     return weeks.reversed.toList();
+  }
+
+  List<Map<String, double>> _computeMonthlyData(List records, DateTime endDate) {
+    final months = List.generate(12, (_) => {'income': 0.0, 'expense': 0.0});
+    for (var rec in records) {
+      try {
+        final rawDate = rec['date']?.toString();
+        if (rawDate == null) continue;
+        final dt = DateTime.parse(rawDate).toLocal();
+        final diffMonths = (endDate.year - dt.year) * 12 + (endDate.month - dt.month);
+        if (diffMonths >= 0 && diffMonths < 12) {
+          final amtRaw = rec['amount'] ?? 0;
+          final amt = amtRaw is String ? double.tryParse(amtRaw) ?? 0.0 : (amtRaw as num).toDouble();
+          final type = (rec['type'] ?? '').toString().toLowerCase();
+          if (type.contains('income')) {
+            months[diffMonths]['income'] = months[diffMonths]['income']! + amt.abs();
+          } else {
+            months[diffMonths]['expense'] = months[diffMonths]['expense']! + amt.abs();
+          }
+        }
+      } catch (_) {}
+    }
+    return months.reversed.toList();
   }
 
   Future<void> _addTransaction(String type, double amount, String date, String? description) async {
@@ -493,18 +529,22 @@ class _FinancialOverviewScreenState extends State<FinancialOverviewScreen> {
                             Row(
                               children: [
                                 ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    setState(() => _chartPeriod = 'month');
+                                  },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF137FEC),
+                                    backgroundColor: _chartPeriod == 'month' ? const Color(0xFF137FEC) : Colors.grey[800],
                                     minimumSize: const Size(60, 32),
                                   ),
                                   child: const Text('Month', style: TextStyle(fontSize: 12)),
                                 ),
                                 const SizedBox(width: 8),
-                                OutlinedButton(
-                                  onPressed: () {},
-                                  style: OutlinedButton.styleFrom(
-                                    side: BorderSide(color: Colors.grey[800]!),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() => _chartPeriod = 'year');
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _chartPeriod == 'year' ? const Color(0xFF137FEC) : Colors.grey[800],
                                     minimumSize: const Size(60, 32),
                                   ),
                                   child: const Text('Year', style: TextStyle(fontSize: 12)),
@@ -555,25 +595,28 @@ class _FinancialOverviewScreenState extends State<FinancialOverviewScreen> {
                         SizedBox(
                           height: 160,
                           child: Builder(builder: (context) {
-                            final weekly = _computeWeeklyData(records);
-                            // find max to scale bars (use positive magnitudes)
+                            final latest = _latestRecordDate(records);
+                            final buckets = _chartPeriod == 'month'
+                                ? _computeWeeklyData(records, latest)
+                                : _computeMonthlyData(records, latest);
                             double maxVal = 1;
-                            for (var w in weekly) {
-                              maxVal = max(maxVal, w['income']!.abs());
-                              maxVal = max(maxVal, w['expense']!.abs());
+                            for (var b in buckets) {
+                              maxVal = max(maxVal, b['income']!.abs());
+                              maxVal = max(maxVal, b['expense']!.abs());
                             }
-
+                            final monthLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: List.generate(weekly.length, (i) {
-                                final w = weekly[i];
+                              children: List.generate(buckets.length, (i) {
+                                final w = buckets[i];
                                 double incomeH = max(0.0, (w['income']! / maxVal) * _chartMaxHeight);
                                 double expenseH = max(0.0, (w['expense']! / maxVal) * _chartMaxHeight);
-                                // ensure very small values are still visible
                                 if (w['income']! > 0 && incomeH < 4) incomeH = 4;
                                 if (w['expense']! > 0 && expenseH < 4) expenseH = 4;
-                                final label = 'Wk ${i + 1}';
+                                final label = _chartPeriod == 'month'
+                                    ? 'Wk ${i + 1}'
+                                    : monthLabels[DateTime(latest.year, latest.month - (buckets.length - 1 - i)).month - 1];
                                 return _buildBarChart(incomeH, expenseH, label);
                               }),
                             );
@@ -666,12 +709,70 @@ class _FinancialOverviewScreenState extends State<FinancialOverviewScreen> {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(12),
                               onTap: () {
+                                final isInc = transaction['type'] == 'Income';
+                                final amtRaw = transaction['amount'] ?? 0;
+                                final amt = amtRaw is String ? double.tryParse(amtRaw) ?? 0.0 : (amtRaw as num).toDouble();
+                                DateTime? dt;
+                                try { dt = DateTime.parse((transaction['date'] ?? '').toString()).toLocal(); } catch (_) {}
                                 showDialog(
                                   context: context,
                                   builder: (_) => AlertDialog(
-                                    title: const Text('Transaction Details'),
-                                    content: SingleChildScrollView(
-                                      child: Text(json.encode(transaction)),
+                                    backgroundColor: const Color(0xFF1E1E1E),
+                                    title: const Text('Transaction Details', style: TextStyle(color: Colors.white)),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 36,
+                                              height: 36,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: isInc ? const Color(0xFF137FEC).withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                                              ),
+                                              child: Icon(isInc ? Icons.trending_up : Icons.trending_down, color: isInc ? const Color(0xFF137FEC) : Colors.red, size: 18),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(transaction['description']?.toString() ?? '—', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                                  const SizedBox(height: 4),
+                                                  Text(transaction['type']?.toString() ?? '', style: TextStyle(color: isInc ? Colors.green : Colors.red)),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('Amount', style: TextStyle(color: Colors.grey[400])),
+                                            Text('${isInc ? '+' : '-'}\$${amt.toStringAsFixed(2)}', style: TextStyle(color: isInc ? Colors.green : Colors.red, fontWeight: FontWeight.bold)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('Date', style: TextStyle(color: Colors.grey[400])),
+                                            Text(dt != null ? dt.toString().split(' ').first : (transaction['date']?.toString() ?? '—'), style: const TextStyle(color: Colors.white)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('Description', style: TextStyle(color: Colors.grey[400])),
+                                            Expanded(child: Text(transaction['description']?.toString() ?? '—', textAlign: TextAlign.end, style: const TextStyle(color: Colors.white))),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                     actions: [
                                       TextButton(
