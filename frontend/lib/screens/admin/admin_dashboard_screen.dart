@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 // import 'package:campus_club_manager/screens/admin/club_management_for_admins_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 
 class AdminDashboardScreen extends StatefulWidget {
   final String? token;
@@ -40,16 +41,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   // final String _apiBaseUrl = 'http://localhost:3000';
   final String _apiBaseUrl = ApiConfig.baseUrl;
+  
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadDashboardData();
     _searchController.addListener(_onSearchChanged);
+    // Start auto-refresh every 30 seconds
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted && !_isLoading) {
+        _loadDashboardData();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _autoRefreshTimer?.cancel();
     _searchController.dispose();
     _clubNameController.dispose();
     _clubDescriptionController.dispose();

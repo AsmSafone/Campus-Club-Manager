@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:campus_club_manager/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:campus_club_manager/utils/file_helper_stub.dart'
+    if (dart.library.io) 'package:campus_club_manager/utils/file_helper_io.dart'
+    if (dart.library.html) 'package:campus_club_manager/utils/file_helper_web.dart' as file_helper;
 
 class FinancialReportGenerationScreen extends StatefulWidget {
   final String? token;
@@ -37,7 +39,13 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
   @override
   void initState() {
     super.initState();
-    _loadClubs();
+    // If clubId is provided, use it directly; otherwise load clubs list
+    if (widget.clubId != null) {
+      _selectedClubId = widget.clubId;
+      // Pre-load finance data if club is already selected
+    } else {
+      _loadClubs();
+    }
     // default dates
     _startDate = DateTime.now().subtract(const Duration(days: 30));
     _endDate = DateTime.now();
@@ -74,10 +82,18 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
   }
 
   Future<void> _generateReport() async {
-    if (_selectedClubId == null) {
+    // Use widget.clubId if provided, otherwise use selected club
+    final clubId = widget.clubId ?? _selectedClubId;
+    if (clubId == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a club')));
       return;
     }
+    
+    if (_startDate == null || _endDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select start and end dates')));
+      return;
+    }
+    
     setState(() {
       _generating = true;
       _errorMessage = null;
@@ -88,7 +104,7 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
     });
 
     try {
-      final uri = Uri.parse('$_apiBaseUrl/api/clubs/${_selectedClubId}/finance');
+      final uri = Uri.parse('$_apiBaseUrl/api/clubs/$clubId/finance');
       final headers = {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
@@ -127,8 +143,26 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
           _genExpense = expense;
           _genNet = income - expense;
         });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Report generated successfully! Found ${filtered.length} transaction(s).'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
         setState(() => _errorMessage = 'Failed to fetch finance records');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to fetch finance records. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() => _errorMessage = 'Error generating report: $e');
@@ -159,18 +193,46 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
 
   Future<void> _exportCsv() async {
     if (_generatedRecords.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No records to export')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No records to export. Please generate a report first.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
       return;
     }
     try {
       final csv = _generateCsvContent();
-      final dir = await getApplicationDocumentsDirectory();
-      final filename = 'financial_report_${DateTime.now().toIso8601String().replaceAll(':', '-')}.csv';
-      final file = File('${dir.path}/$filename');
-      await file.writeAsString(csv);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('CSV saved: ${file.path}')));
+      final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.')[0];
+      final filename = 'financial_report_$timestamp.csv';
+      
+      await file_helper.saveFile(csv, filename);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(kIsWeb 
+                ? 'Report exported successfully!\nDownloaded: $filename'
+                : 'Report exported successfully!\nSaved as: $filename'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+            action: kIsWeb ? null : SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save CSV: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to export CSV: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -227,6 +289,7 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
                 ),
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -239,45 +302,46 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
 
                     const SizedBox(height: 20),
 
-                    // Select Club
-                    Text(
-                      'Select Club',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[500],
-                        fontWeight: FontWeight.w500,
+                    // Select Club (only show if clubId not provided)
+                    if (widget.clubId == null) ...[
+                      Text(
+                        'Select Club',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[800]!),
-                        color: const Color(0xFF101922),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey[800]!),
+                          color: const Color(0xFF101922),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: _loadingClubs
+                            ? const SizedBox(height: 48, child: Center(child: CircularProgressIndicator(color: Color(0xFF137FEC))))
+                            : DropdownButton<int>(
+                                value: _selectedClubId,
+                                isExpanded: true,
+                                underline: const SizedBox(),
+                                style: const TextStyle(color: Colors.white),
+                                dropdownColor: const Color(0xFF192734),
+                                items: _clubs.map((club) {
+                                  return DropdownMenuItem<int>(
+                                    value: club['club_id'] as int,
+                                    child: Text(club['name'] ?? 'Unnamed'),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedClubId = value;
+                                  });
+                                },
+                              ),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: _loadingClubs
-                          ? const SizedBox(height: 48, child: Center(child: CircularProgressIndicator(color: Color(0xFF137FEC))))
-                          : DropdownButton<int>(
-                              value: _selectedClubId,
-                              isExpanded: true,
-                              underline: const SizedBox(),
-                              style: const TextStyle(color: Colors.white),
-                              dropdownColor: const Color(0xFF192734),
-                              items: _clubs.map((club) {
-                                return DropdownMenuItem<int>(
-                                  value: club['club_id'] as int,
-                                  child: Text(club['name'] ?? 'Unnamed'),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedClubId = value;
-                                });
-                              },
-                            ),
-                    ),
-
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
+                    ],
 
                     // Report Type
                     Text(
@@ -310,6 +374,7 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
                       children: [
                         Expanded(
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
@@ -324,7 +389,7 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
                                 onTap: () async {
                                   final picked = await showDatePicker(
                                     context: context,
-                                    initialDate: DateTime.now(),
+                                    initialDate: _startDate ?? DateTime.now().subtract(const Duration(days: 30)),
                                     firstDate: DateTime(2020),
                                     lastDate: DateTime.now(),
                                   );
@@ -333,6 +398,7 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
                                   }
                                 },
                                 child: Container(
+                                  width: double.infinity,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(color: Colors.grey[800]!),
@@ -340,8 +406,11 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
                                   ),
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                                   child: Text(
-                                    _startDate?.toString().split(' ')[0] ?? 'DD/MM/YYYY',
+                                    _startDate != null 
+                                        ? '${_startDate!.year}-${_startDate!.month.toString().padLeft(2, '0')}-${_startDate!.day.toString().padLeft(2, '0')}'
+                                        : 'Select Date',
                                     style: const TextStyle(color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ),
@@ -351,6 +420,7 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
@@ -365,15 +435,23 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
                                 onTap: () async {
                                   final picked = await showDatePicker(
                                     context: context,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime(2020),
+                                    initialDate: _endDate ?? DateTime.now(),
+                                    firstDate: _startDate ?? DateTime(2020),
                                     lastDate: DateTime.now(),
                                   );
                                   if (picked != null) {
                                     setState(() => _endDate = picked);
+                                    // Ensure end date is not before start date
+                                    if (_startDate != null && picked.isBefore(_startDate!)) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('End date must be after start date')),
+                                      );
+                                      setState(() => _endDate = _startDate);
+                                    }
                                   }
                                 },
                                 child: Container(
+                                  width: double.infinity,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(color: Colors.grey[800]!),
@@ -381,8 +459,11 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
                                   ),
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                                   child: Text(
-                                    _endDate?.toString().split(' ')[0] ?? 'DD/MM/YYYY',
+                                    _endDate != null 
+                                        ? '${_endDate!.year}-${_endDate!.month.toString().padLeft(2, '0')}-${_endDate!.day.toString().padLeft(2, '0')}'
+                                        : 'Select Date',
                                     style: const TextStyle(color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ),
@@ -594,7 +675,26 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          setState(() => _reportType = value);
+          setState(() {
+            _reportType = value;
+            // Auto-set date ranges based on report type
+            final now = DateTime.now();
+            switch (value) {
+              case 'Monthly':
+                _startDate = DateTime(now.year, now.month, 1);
+                _endDate = now;
+                break;
+              case 'Annual':
+                _startDate = DateTime(now.year, 1, 1);
+                _endDate = now;
+                break;
+              case 'Custom Range':
+                // Keep current dates or set default
+                _startDate = _startDate ?? now.subtract(const Duration(days: 30));
+                _endDate = _endDate ?? now;
+                break;
+            }
+          });
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../config/api_config.dart';
+import '../../config/api_config.dart';
 
 class UserProfileManagementScreen extends StatefulWidget {
   final String? token;
@@ -522,21 +522,16 @@ class _UserProfileManagementScreenState extends State<UserProfileManagementScree
         'phone': _phoneCtl.text,
         'major': _majorCtl.text,
       };
-      final endpoint = _userId != null ? '${ApiConfig.baseUrl}/api/users/$_userId' : '${ApiConfig.baseUrl}/api/profile';
-      final resp = await http.put(Uri.parse(endpoint), headers: {
-        'Authorization': 'Bearer ${widget.token}',
-        'Content-Type': 'application/json',
-      }, body: json.encode(payload));
-      if (resp.statusCode == 200 || resp.statusCode == 204) {
-        setState(() {
-          _displayName = _nameCtl.text;
-          _email = _emailCtl.text;
-        });
-        Navigator.of(dialogContext).pop();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profile updated')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save profile')));
-      }
+      // Profile update endpoint not implemented
+      // For now, just update local state
+      setState(() {
+        _displayName = _nameCtl.text;
+        _email = _emailCtl.text;
+      });
+      Navigator.of(dialogContext).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profile update functionality not yet implemented')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving profile')));
     } finally {

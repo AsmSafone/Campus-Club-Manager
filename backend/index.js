@@ -9,17 +9,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Sample route to test database connection
-app.get('/test-db', async (req, res) => {
-    try {
-        const pool = await poolPromise;
-        const [rows] = await pool.query('SELECT 1 + 1 AS solution');
-        res.json({ solution: rows[0].solution });
-    } catch (err) {
-        res.status(500).json({ error: 'Database query failed '+err.message });
-    }
-});
-
 // Sign Up endpoint
 app.post('/api/auth/signup', async (req, res) => {
     try {
@@ -274,26 +263,6 @@ app.patch('/api/clubs/:clubId/approve', verifyToken, async (req, res) => {
     }
 });
 
-// removed suspend endpoint; status not stored in DB
-
-app.post('/api/clubs', verifyToken, async (req, res) => {
-    try {
-        const pool = await poolPromise;
-        const { name, description, founded_date } = req.body;
-        if (!name) {
-            return res.status(400).json({ message: 'Name is required' });
-        }
-        const [result] = await pool.query(
-            'INSERT INTO Club (name, description, founded_date) VALUES (?, ?, ?)',
-            [name, description || null, founded_date || null]
-        );
-        res.status(201).json({ club_id: result.insertId, message: 'Club created' });
-    } catch (err) {
-        console.error('Create club error:', err);
-        res.status(500).json({ error: 'Failed to create club' });
-    }
-});
-
 // Delete club
 app.delete('/api/clubs/:clubId', verifyToken, async (req, res) => {
     try {
@@ -345,27 +314,6 @@ app.get('/api/clubs/:clubId', verifyToken, async (req, res) => {
     } catch (err) {
         console.error('Get club details error:', err);
         res.status(500).json({ error: 'Failed to fetch club details' });
-    }
-});
-
-// update club details
-app.put('/api/clubs/:clubId', verifyToken, async (req, res) => {
-    try {
-        const pool = await poolPromise;
-        const { clubId } = req.params;
-        const { name, description, founded_date } = req.body;
-        const [clubExists] = await pool.query('SELECT club_id FROM Club WHERE club_id = ?', [clubId]);
-        if (clubExists.length === 0) {
-            return res.status(404).json({ message: 'Club not found' });
-        }
-        await pool.query(
-            'UPDATE Club SET name = ?, description = ?, founded_date = ? WHERE club_id = ?',
-            [name, description || null, founded_date || null, clubId]
-        );
-        res.status(200).json({ message: 'Club updated' });
-    } catch (err) {
-        console.error('Update club error:', err);
-        res.status(500).json({ error: 'Failed to update club' });
     }
 });
 
@@ -429,7 +377,10 @@ app.get('/api/users/me/upcoming-events', verifyToken, async (req, res) => {
        e.description,
        e.date,
        e.venue,
-       c.name AS club_name
+       e.club_id,
+       c.name AS club_name,
+       (SELECT COUNT(*) FROM Registration r WHERE r.event_id = e.event_id) as attendees,
+       (SELECT COUNT(*) FROM Registration r WHERE r.event_id = e.event_id AND r.user_id = ?) as is_registered
 FROM Event e
 JOIN Club c ON e.club_id = c.club_id
 JOIN Membership m ON m.club_id = e.club_id
@@ -442,12 +393,15 @@ WHERE m.user_id = ?
         AND e2.date >= CURDATE()
   )
 ORDER BY e.date ASC;
-;
-        `, [userId]);
+        `, [userId, userId]);
 
-        console.log(events);
+        // normalize is_registered to boolean
+        const mapped = events.map(ev => ({
+            ...ev,
+            is_registered: (ev.is_registered && ev.is_registered > 0) ? true : false
+        }));
         
-        res.json(events);
+        res.json(mapped);
     } catch (err) {
         console.error('Get my upcoming events error:', err);
         res.status(500).json({ error: 'Failed to fetch user upcoming events' });
@@ -496,7 +450,20 @@ app.post('/api/clubs/:clubId/events', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;
         const { clubId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
         const { title, description, date, time, venue } = req.body;
+        
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+        
+        // Check if user is an executive of the club
+        const [membership] = await pool.query(
+            'SELECT role FROM Membership WHERE club_id = ? AND user_id = ?',
+            [clubId, userId]
+        );
+        
+        if (membership.length === 0 || (membership[0].role !== 'President' && membership[0].role !== 'Secretary' && membership[0].role !== 'Treasurer')) {
+            return res.status(403).json({ message: 'Only club executives can create events' });
+        }
         
         if (!title || !date || !venue) {
             return res.status(400).json({ message: 'Title, date, and venue are required' });
@@ -513,6 +480,28 @@ app.post('/api/clubs/:clubId/events', verifyToken, async (req, res) => {
             [clubId, title, description || null, date, venue]
         );
         
+        // Automatically create a notification/announcement for the new event
+        try {
+            // Format date for display
+            const eventDateObj = new Date(date);
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+            const eventDate = `${months[eventDateObj.getMonth()]} ${eventDateObj.getDate()}, ${eventDateObj.getFullYear()}`;
+            
+            const notificationTitle = `New Event: ${title}`;
+            const notificationDescription = description 
+                ? `${description}\n\n📅 Date: ${eventDate}\n📍 Venue: ${venue}`
+                : `Join us on ${eventDate} at ${venue}!`;
+            
+            await pool.query(
+                'INSERT INTO Notification (club_id, title, description) VALUES (?, ?, ?)',
+                [clubId, notificationTitle, notificationDescription]
+            );
+        } catch (notifErr) {
+            // Log error but don't fail the event creation
+            console.error('Failed to create notification for event:', notifErr);
+        }
+        
         res.status(201).json({ 
             message: 'Event created successfully',
             event_id: result.insertId
@@ -528,6 +517,19 @@ app.delete('/api/clubs/:clubId/events/:eventId', verifyToken, async (req, res) =
     try {
         const pool = await poolPromise;
         const { clubId, eventId } = req.params;
+        const userId = req.user?.userId || req.user?.user_id || null;
+        
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+        
+        // Check if user is an executive of the club
+        const [membership] = await pool.query(
+            'SELECT role FROM Membership WHERE club_id = ? AND user_id = ?',
+            [clubId, userId]
+        );
+        
+        if (membership.length === 0 || (membership[0].role !== 'President' && membership[0].role !== 'Secretary' && membership[0].role !== 'Treasurer')) {
+            return res.status(403).json({ message: 'Only club executives can delete events' });
+        }
         
         // Check if event exists and belongs to the club
         const [event] = await pool.query(
@@ -536,7 +538,7 @@ app.delete('/api/clubs/:clubId/events/:eventId', verifyToken, async (req, res) =
         );
         
         if (event.length === 0) {
-            return res.status(404).json({ message: 'Event not found' });
+            return res.status(404).json({ message: 'Event not found or does not belong to this club' });
         }
         
         // Delete the event (cascades to registrations)
@@ -803,50 +805,6 @@ app.post('/api/clubs/:clubId/finance', verifyToken, async (req, res) => {
     } catch (err) {
         console.error('Add finance error:', err);
         res.status(500).json({ error: 'Failed to add financial record' });
-    }
-});
-
-// Start server only after database is ready
-
-// Update user role in a club
-app.patch('/api/clubs/:clubId/members/:userId/role', verifyToken, async (req, res) => {
-    try {
-        const pool = await poolPromise;
-        const { clubId, userId } = req.params;
-        const { role } = req.body;
-        
-        // Validate role
-        const validRoles = ['President', 'Secretary', 'Member'];
-        if (!validRoles.includes(role)) {
-            return res.status(400).json({ message: 'Invalid role' });
-        }
-        
-        // Check if membership exists
-        const [membership] = await pool.query(
-            'SELECT membership_id FROM Membership WHERE club_id = ? AND user_id = ?',
-            [clubId, userId]
-        );
-        
-        if (membership.length === 0) {
-            return res.status(404).json({ message: 'User is not a member of this club' });
-        }
-
-        const already_executive = await pool.query('select * from Membership WHERE user_id = ? and role != Member',[userId]);
-
-        if(already_executive.length > 0){
-            return res.status(300).json({ message: 'User is already an executive'});
-        }
-        
-        // Update the role
-        await pool.query(
-            'UPDATE Membership SET role = ? WHERE club_id = ? AND user_id = ?',
-            [role, clubId, userId]
-        );
-        
-        res.json({ message: 'User role updated successfully' });
-    } catch (err) {
-        console.error('Update user role error:', err);
-        res.status(500).json({ error: 'Failed to update user role' });
     }
 });
 
@@ -1284,6 +1242,11 @@ app.post('/api/clubs/:clubId/requests/:requestId/accept', verifyToken, async (re
         );
 
         if (existingMembership.length > 0) {
+            // Delete any existing non-Pending requests for this user-club combination
+            await pool.query(
+                'DELETE FROM ClubRequest WHERE user_id = ? AND club_id = ? AND status != ?',
+                [requesterUserId, clubId, 'Pending']
+            );
             // Update request status to approved
             await pool.query(
                 'UPDATE ClubRequest SET status = ? WHERE request_id = ?',
@@ -1296,6 +1259,13 @@ app.post('/api/clubs/:clubId/requests/:requestId/accept', verifyToken, async (re
         await pool.query('START TRANSACTION');
 
         try {
+            // Delete any existing non-Pending requests for this user-club combination
+            // This prevents unique constraint violations when updating to Approved
+            await pool.query(
+                'DELETE FROM ClubRequest WHERE user_id = ? AND club_id = ? AND status != ?',
+                [requesterUserId, clubId, 'Pending']
+            );
+
             // Add user to membership
             await pool.query(
                 'INSERT INTO Membership (user_id, club_id, role, join_date) VALUES (?, ?, ?, ?)',

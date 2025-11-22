@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campus_club_manager/screens/club_executive_club_management_screen.dart';
 import 'package:campus_club_manager/screens/member/club_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -355,25 +354,10 @@ class _ClubListScreenState extends State<ClubListScreen> {
   }
 
   Future<void> _suspendClub(Club club) async {
-    if (widget.token == null) return;
-    setState(() => _isLoading = true);
-    try {
-      final endpoint = '${ApiConfig.baseUrl}/api/clubs/${club.id}/suspend';
-      final resp = await http.post(Uri.parse(endpoint), headers: {
-        'Authorization': 'Bearer ${widget.token}',
-        'Content-Type': 'application/json',
-      });
-      if (resp.statusCode == 200 || resp.statusCode == 204) {
-        await _refreshClubs();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${club.name} suspended')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to suspend club')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-    } finally {
-      setState(() => _isLoading = false);
-    }
+    // Endpoint not implemented - suspend functionality removed
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Suspend functionality is not available')),
+    );
   }
 }
 

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:campus_club_manager/screens/executive/club_detail_screen.dart';
 import 'package:campus_club_manager/utils/auth_utils.dart';
-import 'package:campus_club_manager/screens/financial_overview_screen.dart';
+import 'package:campus_club_manager/screens/executive/financial_overview_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:campus_club_manager/config/api_config.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'executive_events_screen.dart';
-import '../finance_transactions_screen.dart';
-import '../club_executive_club_management_screen.dart';
 import '../notification_view_screen.dart';
 import 'broadcast_message_screen.dart';
 
@@ -32,6 +31,8 @@ class _ClubExecutiveDashboardScreenState
   bool _isLoading = true;
   String? _errorMessage;
   int? _clubId;
+  
+  Timer? _autoRefreshTimer;
 
   // Event form controllers
   final _eventTitleController = TextEditingController();
@@ -54,10 +55,17 @@ class _ClubExecutiveDashboardScreenState
   void initState() {
     super.initState();
     _initializeClubData();
+    // Start auto-refresh every 30 seconds
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted && !_isLoading) {
+        _loadDashboardData();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _autoRefreshTimer?.cancel();
     _eventTitleController.dispose();
     _eventDescriptionController.dispose();
     _eventDateController.dispose();
@@ -609,8 +617,8 @@ class _ClubExecutiveDashboardScreenState
               label: 'Finances',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.send),
-              label: 'Send Notification',
+              icon: Icon(Icons.notifications),
+              label: 'Announcements',
             ),
           ],
         ),
@@ -1265,40 +1273,6 @@ class _ClubExecutiveDashboardScreenState
           ),
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.alarm, color: Color(0xFF137FEC)),
-                tooltip: 'Send Reminder',
-                onPressed: () async {
-                  final eventId = event['event_id'];
-                  if (widget.token == null || eventId == null) return;
-                  try {
-                    final uri = Uri.parse(
-                      '$_apiBaseUrl/api/events/$eventId/remind',
-                    );
-                    final resp = await http.post(
-                      uri,
-                      headers: {
-                        'Authorization': 'Bearer ${widget.token}',
-                        'Content-Type': 'application/json',
-                      },
-                      body: json.encode({}),
-                    );
-                    if (resp.statusCode == 201 || resp.statusCode == 200) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Reminders sent')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed (${resp.statusCode})')),
-                      );
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                  }
-                },
-              ),
               const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             ],
           ),

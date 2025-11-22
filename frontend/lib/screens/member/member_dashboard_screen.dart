@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:campus_club_manager/screens/member/club_details_screen.dart';
 import 'package:campus_club_manager/screens/member/club_list_screen.dart';
 import 'package:campus_club_manager/screens/member/my_event_list.dart';
-import 'package:campus_club_manager/screens/event_details_screen.dart';
 import 'package:campus_club_manager/screens/notification_view_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import 'package:campus_club_manager/screens/executive/executive_events_screen.dart';
-import 'package:campus_club_manager/screens/membership_status_management_screen.dart';
-import 'package:campus_club_manager/screens/user_profile_management_screen.dart';
+import 'package:campus_club_manager/screens/member/user_profile_management_screen.dart';
 import 'package:intl/intl.dart';
 import '../../config/api_config.dart';
 import 'package:campus_club_manager/utils/auth_utils.dart';
@@ -83,6 +82,8 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
   List<dynamic>? _latestAnnouncement;
   List<dynamic>? _myClubs;
   bool _lastScrollWasReverse = false;
+  Timer? _autoRefreshTimer;
+  Set<int> _dismissedAnnouncements = {}; // Track dismissed announcements by ID
   // Api base URL
 
   @override
@@ -99,6 +100,18 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
       }
     }
     _loadDashboard();
+    // Start auto-refresh every 30 seconds
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted && !_loading) {
+        _loadDashboard();
+      }
+    });
+  }
+  
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadDashboard() async {
@@ -226,14 +239,14 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                       Row(
                         children: [
                           // notifications with badge
-                          IconButton(onPressed: (){
-                                _loadDashboard();
-                              },
+                          IconButton(
+                              onPressed: _loadDashboard,
                               icon: const Icon(
-                                  Icons.refresh,
-                                  color: Colors.white,
-                                ),
+                                Icons.refresh,
+                                color: Colors.white,
                               ),
+                              tooltip: 'Refresh',
+                            ),
                               IconButton(
                                 icon: const Icon(
                                   Icons.notifications,
@@ -287,9 +300,16 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                             ),
                           ),
                           SizedBox(height: 12),
-                          ..._latestAnnouncement!.map((ann) {
+                          ..._latestAnnouncement!.where((ann) {
+                            final annMap = Map<String, dynamic>.from(ann as Map);
+                            final annId = annMap['id'] ?? annMap['notification_id'];
+                            if (annId == null) return true;
+                            // Convert to int if possible
+                            final idInt = annId is int ? annId : (annId is num ? annId.toInt() : int.tryParse(annId.toString()));
+                            return idInt == null || !_dismissedAnnouncements.contains(idInt);
+                          }).map((ann) {
                             final announcement = Announcement.fromMap(Map<String, dynamic>.from(ann as Map));
-                            return _buildAnnouncementCard(announcement);
+                            return _buildAnnouncementCard(announcement, ann);
                           }).toList(),
                         ],
                       ),
@@ -469,55 +489,65 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Color(0xFF192734),
-        selectedItemColor: Color(0xFF4A90E2),
-        unselectedItemColor: Colors.grey[600],
-        currentIndex: _selectedNavIndex,
-        onTap: (index) async {
-          // Home: reload dashboard when returning to this screen
-          if (index == 0) {
-            setState(() => _selectedNavIndex = 0);
-            await _loadDashboard();
-            return;
-          }
-          print(index);
-          // Events: open MyEventList (requires clubId and token)
-          if (index == 1) {
-            await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    MyEventList(token: widget.token, clubId: _clubId),
-              ),
-            );
-            return;
-          }
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: Colors.grey[800]!)),
+          color: const Color(0xFF121212),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: const Color(0xFF121212),
+          selectedItemColor: const Color(0xFF137FEC),
+          unselectedItemColor: Colors.grey[600],
+          currentIndex: _selectedNavIndex,
+          onTap: (index) async {
+            setState(() {
+              _selectedNavIndex = index;
+            });
+            
+            // Home: reload dashboard when returning to this screen
+            if (index == 0) {
+              await _loadDashboard();
+              return;
+            }
+            
+            // Events: open MyEventList (requires clubId and token)
+            if (index == 1) {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      MyEventList(token: widget.token, clubId: _clubId),
+                ),
+              );
+              return;
+            }
 
-          // Members: open membership management
-          if (index == 2) {
-            await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    ClubListScreen(token: widget.token, clubId: _clubId),
-              ),
-            );
-            return;
-          }
+            // Clubs: open membership management
+            if (index == 2) {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      ClubListScreen(token: widget.token, clubId: _clubId),
+                ),
+              );
+              return;
+            }
 
-          // Profile: open user profile management
-          if (index == 3) {
-            await Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => UserProfileManagementScreen()),
-            );
-            return;
-          }
-        },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Clubs'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+            // Profile: open user profile management
+            if (index == 3) {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => UserProfileManagementScreen()),
+              );
+              return;
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Events'),
+            BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Clubs'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          ],
+        ),
       ),
     );
   }
@@ -670,11 +700,13 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
 
     return InkWell(
       onTap: () {
-        // Navigate to event details, pass the raw event map and token
+        // Navigate to all events page
         try {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => EventDetailsScreen(event: data, token: widget.token, clubId: _clubId,),
-          ));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => MyEventList(token: widget.token, clubId: _clubId),
+            ),
+          );
         } catch (_) {}
       },
       child: Container(
@@ -835,38 +867,115 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
       ));
   }
 
-  Widget _buildAnnouncementCard(Announcement announcement) {
+  Widget _buildAnnouncementCard(Announcement announcement, dynamic annData) {
+    final annMap = Map<String, dynamic>.from(annData as Map);
+    final annId = annMap['id'] ?? annMap['notification_id'];
+    
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Color(0xFF192734),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[800]!),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!.withOpacity(0.3)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Text(
-            announcement.title,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
+          Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  announcement.title.isNotEmpty 
+                      ? announcement.title 
+                      : 'Important Announcement!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    height: 1.2,
+                  ),
+                ),
+                SizedBox(height: 12),
+                // Description
+                if (announcement.description.isNotEmpty)
+                  Text(
+                    announcement.description,
+                    style: TextStyle(
+                      color: Colors.grey[300],
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                SizedBox(height: 16),
+                // Learn More link
+                InkWell(
+                  onTap: () {
+                    // Navigate to notification panel
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => NotificationViewScreen(
+                          token: widget.token,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Learn More',
+                        style: TextStyle(
+                          color: Color(0xFF137FEC),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward,
+                        color: Color(0xFF137FEC),
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 6),
-          Text(
-            announcement.description,
-            style: TextStyle(color: Colors.grey[400], fontSize: 12),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: 8),
-          Text(
-            announcement.date,
-            style: TextStyle(color: Colors.grey[600], fontSize: 10),
+          // Dismiss button in top right
+          Positioned(
+            top: 8,
+            right: 8,
+            child: IconButton(
+              icon: Icon(
+                Icons.close,
+                color: Colors.grey[400],
+                size: 20,
+              ),
+              onPressed: () {
+                // Dismiss/hide this announcement
+                if (annId != null) {
+                  setState(() {
+                    // Convert to int if possible
+                    final idInt = annId is int 
+                        ? annId 
+                        : (annId is num 
+                            ? annId.toInt() 
+                            : int.tryParse(annId.toString()));
+                    if (idInt != null) {
+                      _dismissedAnnouncements.add(idInt);
+                    }
+                  });
+                }
+              },
+              padding: EdgeInsets.all(4),
+              constraints: BoxConstraints(),
+              tooltip: 'Dismiss',
+            ),
           ),
         ],
       ),

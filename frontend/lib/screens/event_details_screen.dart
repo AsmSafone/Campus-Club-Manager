@@ -84,10 +84,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       }, body: json.encode({}));
 
       if (resp.statusCode == 200 || resp.statusCode == 201) {
-        setState(() {
-          _registered = true;
-          _attendees += 1;
-        });
+        if (mounted) {
+          setState(() {
+            _registered = true;
+            _attendees += 1;
+          });
+        }
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registered successfully')));
       } else {
         try {
@@ -166,7 +168,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _registering ? null : _register,
+              onPressed: (_registering || _registered) ? null : _register,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _registered ? Colors.grey : null,
+              ),
               child: _registering
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : Text(_registered ? 'Registered' : 'Register'),

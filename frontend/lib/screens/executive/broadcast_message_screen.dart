@@ -86,7 +86,7 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Compose Notification'),
+        title: const Text('Compose Announcement'),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -112,7 +112,7 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
                 TextFormField(
                   controller: _subjectController,
                   decoration: InputDecoration(
-                    hintText: 'Enter notification title',
+                    hintText: 'Enter title',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

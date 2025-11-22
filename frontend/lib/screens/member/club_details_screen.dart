@@ -59,10 +59,15 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
       });
       if (resp.statusCode == 200) {
         final list = json.decode(resp.body) as List;
-        final members = list.map((m) => Member.fromMap(m)).toList();
+        final allMembers = list.map((m) => Member.fromMap(m)).toList();
+        // Filter to show only executives (President, Secretary, Treasurer)
+        final executives = allMembers.where((m) {
+          final role = (m.role ?? '').toLowerCase();
+          return role == 'president' || role == 'secretary' || role == 'treasurer';
+        }).toList();
         setState(() {
-          _members = members;
-          _filtered = members;
+          _members = executives;
+          _filtered = executives;
         });
       }
     } catch (e) {
@@ -175,7 +180,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
                       children: [
                         Text(club.name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 4),
-                        Text('${_members.length} Members', style: TextStyle(color: Colors.grey[400])),
+                        Text('${_members.length} Executives', style: TextStyle(color: Colors.grey[400])),
                       ],
                     ),
                   ),
@@ -195,7 +200,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
                 controller: _searchController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Search members by name...',
+                  hintText: 'Search executives by name...',
                   hintStyle: TextStyle(color: Colors.grey[500]),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 14,horizontal: 12),
@@ -209,7 +214,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _filtered.isEmpty
-                      ? Center(child: Text('No members', style: TextStyle(color: Colors.grey[500])))
+                      ? Center(child: Text('No executives', style: TextStyle(color: Colors.grey[500])))
                       : ListView.builder(
                           itemCount: _filtered.length,
                           itemBuilder: (ctx, i) {
@@ -356,40 +361,11 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Edit role for ${member.name}')));
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.remove_circle, color: Colors.red),
-            title: const Text('Remove Member'),
-            onTap: () {
-              Navigator.pop(context);
-              _removeMember(member);
-            },
-          ),
         ],
       ),
     );
   }
 
-  Future<void> _removeMember(Member member) async {
-    if (widget.token == null || widget.club.id == null) return;
-    setState(() => _loading = true);
-    try {
-      final endpoint = '$_apiBase/api/clubs/${widget.club.id}/members/${member.id}/remove';
-      final resp = await http.post(Uri.parse(endpoint), headers: {
-        'Authorization': 'Bearer ${widget.token}',
-        'Content-Type': 'application/json',
-      });
-      if (resp.statusCode == 200 || resp.statusCode == 204) {
-        await _loadMembers();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${member.name} removed')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to remove member')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
 
   Future<void> _joinClub() async {
     if (widget.token == null || widget.club.id == null) return;

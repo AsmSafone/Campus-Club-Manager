@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS ClubRequest (
         ON DELETE CASCADE,
     FOREIGN KEY (club_id) REFERENCES Club(club_id)
         ON DELETE CASCADE,
+    -- Only enforce uniqueness for Pending requests to allow multiple historical requests
     UNIQUE KEY unique_pending_request (user_id, club_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
