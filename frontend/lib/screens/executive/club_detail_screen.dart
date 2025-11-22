@@ -19,14 +19,17 @@ class _ClubDetailState extends State<ClubDetailScreen> {
 
   List<Member> _members = [];
   List<Member> _filteredMembers = [];
+  List<JoinRequest> _pendingRequests = [];
   Map<String, dynamic>? _clubDetails;
   bool _isLoading = true;
   String? _errorMessage;
+  int _selectedTab = 0; // 0 = Members, 1 = Pending Requests
 
   @override
   void initState() {
     super.initState();
     _loadClubMembers();
+    _loadPendingRequests();
     _searchController.addListener(_filterMembers);
   }
 
@@ -38,16 +41,7 @@ class _ClubDetailState extends State<ClubDetailScreen> {
 
   Future<void> _loadClubMembers() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
       if (widget.token == null || widget.token!.isEmpty) {
-        setState(() {
-          _errorMessage = 'No authentication token available.';
-          _isLoading = false;
-        });
         return;
       }
 
@@ -69,17 +63,61 @@ class _ClubDetailState extends State<ClubDetailScreen> {
         setState(() {
           _members = members;
           _filteredMembers = members;
+        });
+      }
+    } catch (e) {
+      print('Error loading members: $e');
+    }
+  }
+
+  Future<void> _loadPendingRequests() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      if (widget.token == null || widget.token!.isEmpty) {
+        setState(() {
+          _errorMessage = 'No authentication token available.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final clubId = widget.clubId ?? 1;
+      final headers = {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = await http.get(
+        Uri.parse('$_apiBaseUrl/api/clubs/$clubId/requests'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final requests = data.map((r) => JoinRequest.fromJson(r)).toList();
+        
+        setState(() {
+          _pendingRequests = requests;
+          _isLoading = false;
+        });
+      } else if (response.statusCode == 403) {
+        setState(() {
+          _errorMessage = 'You do not have permission to view requests';
           _isLoading = false;
         });
       } else {
         setState(() {
-          _errorMessage = 'Failed to load members';
+          _errorMessage = 'Failed to load requests';
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error loading members: $e';
+        _errorMessage = 'Error loading requests: $e';
         _isLoading = false;
       });
     }
@@ -277,6 +315,68 @@ class _ClubDetailState extends State<ClubDetailScreen> {
     );
   }
 
+  Future<void> _acceptRequest(JoinRequest request) async {
+    try {
+      final clubId = widget.clubId ?? 1;
+      final headers = {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = await http.post(
+        Uri.parse('$_apiBaseUrl/api/clubs/$clubId/requests/${request.requestId}/accept'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${request.name} accepted successfully')),
+        );
+        _loadPendingRequests();
+        _loadClubMembers();
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorData['message'] ?? 'Failed to accept request')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _rejectRequest(JoinRequest request) async {
+    try {
+      final clubId = widget.clubId ?? 1;
+      final headers = {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = await http.post(
+        Uri.parse('$_apiBaseUrl/api/clubs/$clubId/requests/${request.requestId}/reject'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${request.name} rejected')),
+        );
+        _loadPendingRequests();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to reject request')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -310,7 +410,10 @@ class _ClubDetailState extends State<ClubDetailScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.refresh, color: Color(0xFF4A90E2)),
-                    onPressed: _loadClubMembers,
+                    onPressed: () {
+                      _loadClubMembers();
+                      _loadPendingRequests();
+                    },
                   ),
                 ],
               ),
@@ -339,85 +442,168 @@ class _ClubDetailState extends State<ClubDetailScreen> {
                 ],
               ),
             )
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Members Count
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Text(
-                        'Total Members: ${_filteredMembers.length}',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[400],
+          : Column(
+              children: [
+                // Tab Bar
+                Container(
+                  color: const Color(0xFF192734),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedTab = 0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: _selectedTab == 0 ? const Color(0xFF4A90E2) : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              'Members (${_members.length})',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _selectedTab == 0 ? Colors.white : Colors.grey[600],
+                                fontWeight: _selectedTab == 0 ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-
-                    // Search Bar
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[800]!),
-                        color: const Color(0xFF192734),
-                      ),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12.0,
-                            ),
-                            child: Icon(Icons.search, color: Colors.grey[600]),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                hintText: 'Search members by name or email...',
-                                hintStyle: TextStyle(color: Colors.grey[600]),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => _selectedTab = 1);
+                            _loadPendingRequests();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: _selectedTab == 1 ? const Color(0xFF4A90E2) : Colors.transparent,
+                                  width: 2,
                                 ),
                               ),
                             ),
+                            child: Text(
+                              'Pending Requests (${_pendingRequests.length})',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _selectedTab == 1 ? Colors.white : Colors.grey[600],
+                                fontWeight: _selectedTab == 1 ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Members List
-                    _filteredMembers.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(32.0),
-                              child: Text(
-                                'No members found',
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                            ),
-                          )
-                        : Column(
-                            children: List.generate(
-                              _filteredMembers.length,
-                              (index) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
-                                child: _buildMemberCard(
-                                  _filteredMembers[index],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                    const SizedBox(height: 16),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                // Content
+                Expanded(
+                  child: _selectedTab == 0
+                      ? SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Search Bar
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.grey[800]!),
+                                    color: const Color(0xFF192734),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12.0,
+                                        ),
+                                        child: Icon(Icons.search, color: Colors.grey[600]),
+                                      ),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _searchController,
+                                          style: const TextStyle(color: Colors.white),
+                                          decoration: InputDecoration(
+                                            hintText: 'Search members by name or email...',
+                                            hintStyle: TextStyle(color: Colors.grey[600]),
+                                            border: InputBorder.none,
+                                            contentPadding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // Members List
+                                _filteredMembers.isEmpty
+                                    ? Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(32.0),
+                                          child: Text(
+                                            'No members found',
+                                            style: TextStyle(color: Colors.grey[600]),
+                                          ),
+                                        ),
+                                      )
+                                    : Column(
+                                        children: List.generate(
+                                          _filteredMembers.length,
+                                          (index) => Padding(
+                                            padding: const EdgeInsets.only(bottom: 12.0),
+                                            child: _buildMemberCard(
+                                              _filteredMembers[index],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _pendingRequests.isEmpty
+                                    ? Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(32.0),
+                                          child: Text(
+                                            'No pending requests',
+                                            style: TextStyle(color: Colors.grey[600]),
+                                          ),
+                                        ),
+                                      )
+                                    : Column(
+                                        children: List.generate(
+                                          _pendingRequests.length,
+                                          (index) => Padding(
+                                            padding: const EdgeInsets.only(bottom: 12.0),
+                                            child: _buildRequestCard(_pendingRequests[index]),
+                                          ),
+                                        ),
+                                      ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+              ],
             ),
     );
   }
@@ -489,6 +675,108 @@ class _ClubDetailState extends State<ClubDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRequestCard(JoinRequest request) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!),
+        color: const Color(0xFF192734),
+      ),
+      padding: const EdgeInsets.all(12.0),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.orange.withOpacity(0.3),
+            ),
+            child: const Icon(Icons.person_add, color: Colors.orange, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  request.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  request.email,
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Requested: ${request.requestedAt}',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.check, color: Colors.green),
+                onPressed: () => _acceptRequest(request),
+                tooltip: 'Accept',
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.red),
+                onPressed: () => _rejectRequest(request),
+                tooltip: 'Reject',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class JoinRequest {
+  final int requestId;
+  final int userId;
+  final String name;
+  final String email;
+  final String status;
+  final String requestedAt;
+
+  JoinRequest({
+    required this.requestId,
+    required this.userId,
+    required this.name,
+    required this.email,
+    required this.status,
+    required this.requestedAt,
+  });
+
+  factory JoinRequest.fromJson(Map<String, dynamic> json) {
+    return JoinRequest(
+      requestId: json['request_id'] ?? 0,
+      userId: json['user_id'] ?? 0,
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      status: json['status'] ?? 'Pending',
+      requestedAt: json['requested_at'] != null
+          ? DateTime.parse(json['requested_at']).toString().split('.')[0]
+          : '',
     );
   }
 }

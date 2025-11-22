@@ -24,6 +24,12 @@ class _ExecutiveEventsScreenState extends State<ExecutiveEventsScreen> {
     _eventsFuture = _fetchAllEvents();
   }
 
+  void _refreshEvents() {
+    setState(() {
+      _eventsFuture = _fetchAllEvents();
+    });
+  }
+
   Future<List<Map<String, dynamic>>> _fetchAllEvents() async {
     try {
       final headers = {
@@ -126,17 +132,7 @@ class _ExecutiveEventsScreenState extends State<ExecutiveEventsScreen> {
 
                 return Column(
                 children: [
-                  InkWell(
-                  onTap: () {
-                    Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => 
-                      EventDetailsScreen(event: event, token: widget.token, clubId: widget.clubId,),
-                    ),
-                    );
-                  },
-                  child: Container(
+                  Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
@@ -144,103 +140,123 @@ class _ExecutiveEventsScreenState extends State<ExecutiveEventsScreen> {
                     ),
                     child: Row(
                     children: [
-                      Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
-                        color: const Color(0xFF137FEC).withOpacity(0.2),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if ((event['isRegistered'] ?? event['registered'] ?? event['attending'] ?? event['is_registered']) == true) ...[
+                      Expanded(
+                        child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => 
+                            EventDetailsScreen(event: event, token: widget.token, clubId: widget.clubId,),
+                          ),
+                          ).then((_) => _refreshEvents());
+                        },
+                        child: Row(
+                          children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              margin: const EdgeInsets.only(bottom: 6),
+                              width: 60,
+                              height: 60,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF137FEC),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(6),
+                                color: const Color(0xFF137FEC).withOpacity(0.2),
                               ),
-                              child: const Text(
-                                'REGISTERED',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if ((event['isRegistered'] ?? event['registered'] ?? event['attending'] ?? event['is_registered']) == true) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      margin: const EdgeInsets.only(bottom: 6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF137FEC),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Text(
+                                        'REGISTERED',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ] else const SizedBox(height: 6),
+                                  Text(
+                                    month,
+                                    style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF137FEC),
+                                    ),
+                                  ),
+                                  Text(
+                                    day,
+                                    style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF137FEC),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ] else const SizedBox(height: 6),
-                        Text(
-                          month,
-                          style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF137FEC),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    event['title'] ?? 'Untitled Event',
+                                    style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    event['venue'] ?? 'No venue',
+                                    style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[400],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (event['description'] != null && event['description'].toString().isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                    event['description'] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[500],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '${event['attendees'] ?? 0} attendees',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          day,
-                          style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF137FEC),
-                          ),
-                        ),
-                        ],
                       ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                        Text(
-                          event['title'] ?? 'Untitled Event',
-                          style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 15,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          event['venue'] ?? 'No venue',
-                          style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[400],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (event['description'] != null && event['description'].toString().isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                          event['description'] ?? '',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[500],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                        ],
-                      ),
-                      ),
-                      Text(
-                      '${event['attendees'] ?? 0} attendees',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[500],
-                      ),
+                      IconButton(
+                        icon: const Icon(Icons.more_vert, color: Colors.grey),
+                        onPressed: () => _showEventOptions(context, event),
                       ),
                     ],
                     ),
-                  ),
                   ),
                   if (index < events.length - 1) const SizedBox(height: 12),
                 ],
@@ -250,5 +266,122 @@ class _ExecutiveEventsScreenState extends State<ExecutiveEventsScreen> {
         },
       ),
     );
+  }
+
+  void _showEventOptions(BuildContext context, Map<String, dynamic> event) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF192734),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.visibility, color: Colors.white),
+            title: const Text('View Details', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EventDetailsScreen(
+                    event: event,
+                    token: widget.token,
+                    clubId: widget.clubId,
+                  ),
+                ),
+              ).then((_) => _refreshEvents());
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete, color: Colors.red),
+            title: const Text('Delete Event', style: TextStyle(color: Colors.red)),
+            onTap: () {
+              Navigator.pop(context);
+              _confirmDeleteEvent(event);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteEvent(Map<String, dynamic> event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF192734),
+        title: const Text(
+          'Delete Event?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${event['title'] ?? 'this event'}"? This action cannot be undone.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteEvent(event);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteEvent(Map<String, dynamic> event) async {
+    try {
+      final eventId = event['event_id'];
+      if (eventId == null || widget.clubId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid event data')),
+        );
+        return;
+      }
+
+      final headers = {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = await http.delete(
+        Uri.parse('$_apiBaseUrl/api/clubs/${widget.clubId}/events/$eventId'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Event deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _refreshEvents();
+      } else {
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorData['message'] ?? 'Failed to delete event'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS User (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('Admin', 'Executive', 'Member') NOT NULL DEFAULT 'Member'
+    role ENUM('Admin', 'Executive', 'Member', 'Guest') NULL DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Club (
@@ -71,6 +71,21 @@ CREATE TABLE IF NOT EXISTS Notification (
     FOREIGN KEY (club_id) REFERENCES Club(club_id)
         ON DELETE CASCADE
 );
+
+-- Club Join Requests
+CREATE TABLE IF NOT EXISTS ClubRequest (
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    club_id INT NOT NULL,
+    status ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (club_id) REFERENCES Club(club_id)
+        ON DELETE CASCADE,
+    -- Only enforce uniqueness for Pending requests to allow multiple historical requests
+    UNIQUE KEY unique_pending_request (user_id, club_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 

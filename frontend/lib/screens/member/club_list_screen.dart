@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campus_club_manager/screens/club_executive_club_management_screen.dart';
 import 'package:campus_club_manager/screens/member/club_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -321,52 +320,6 @@ class _ClubListScreenState extends State<ClubListScreen> {
     );
   }
 
-  void _showClubMenu(Club club) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF192734),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.visibility),
-            title: const Text('View Details'),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => ClubExecutiveClubManagementScreen()));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.edit),
-            title: const Text('Edit Club'),
-            onTap: () {
-              Navigator.pop(context);
-              _editClub(club);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.check_circle, color: Colors.green),
-            title: const Text('Approve'),
-            onTap: () {
-              Navigator.pop(context);
-              _approveClub(club);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.block, color: Colors.orange),
-            title: const Text('Suspend'),
-            onTap: () {
-              Navigator.pop(context);
-              _suspendClub(club);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _editClub(Club club) async {
     if (widget.token == null) return;
     setState(() => _isLoading = true);
@@ -401,25 +354,10 @@ class _ClubListScreenState extends State<ClubListScreen> {
   }
 
   Future<void> _suspendClub(Club club) async {
-    if (widget.token == null) return;
-    setState(() => _isLoading = true);
-    try {
-      final endpoint = '${ApiConfig.baseUrl}/api/clubs/${club.id}/suspend';
-      final resp = await http.post(Uri.parse(endpoint), headers: {
-        'Authorization': 'Bearer ${widget.token}',
-        'Content-Type': 'application/json',
-      });
-      if (resp.statusCode == 200 || resp.statusCode == 204) {
-        await _refreshClubs();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${club.name} suspended')));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to suspend club')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
-    } finally {
-      setState(() => _isLoading = false);
-    }
+    // Endpoint not implemented - suspend functionality removed
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Suspend functionality is not available')),
+    );
   }
 }
 

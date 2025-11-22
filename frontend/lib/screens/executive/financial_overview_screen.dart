@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_club_manager/config/api_config.dart';
-import 'package:campus_club_manager/screens/financial_report_generation_screen.dart';
-import 'package:campus_club_manager/screens/financial_report_viewer_screen.dart';
+import 'package:campus_club_manager/screens/executive/financial_report_generation_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
@@ -808,41 +807,65 @@ class _FinancialOverviewScreenState extends State<FinancialOverviewScreen> {
   }
 
   Widget _buildBarChart(double incomeHeight, double expenseHeight, String label) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                width: 30,
-                height: incomeHeight,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF137FEC).withOpacity(0.2),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Reserve space for label and spacing (approximately 20px)
+        final availableHeight = constraints.maxHeight - 20;
+        final totalBarHeight = incomeHeight + 4 + expenseHeight;
+        
+        // Scale bars if they exceed available space
+        double scale = 1.0;
+        if (totalBarHeight > availableHeight && availableHeight > 0) {
+          scale = availableHeight / totalBarHeight;
+        }
+        
+        final scaledIncomeHeight = incomeHeight * scale;
+        final scaledExpenseHeight = expenseHeight * scale;
+        
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Flexible(
+              fit: FlexFit.tight,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 30,
+                    height: scaledIncomeHeight,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF137FEC).withOpacity(0.2),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: 30,
+                    height: scaledExpenseHeight,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.3),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Container(
-                width: 30,
-                height: expenseHeight,
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.3),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Colors.grey[500],
+                fontSize: 10,
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Colors.grey[500],
-          ),
-        ),
-      ],
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ],
+        );
+      },
     );
   }
 

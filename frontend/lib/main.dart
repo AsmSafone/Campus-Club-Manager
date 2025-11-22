@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/executive/broadcast_message_screen.dart';
 import 'screens/executive/executive_dashboard_screen.dart';
-import 'screens/club_executive_club_management_screen.dart';
 // import 'screens/admin/club_management_for_admins_screen.dart';
 import 'screens/member/member_dashboard_screen.dart';
-import 'screens/financial_overview_screen.dart';
-import 'screens/financial_report_generation_screen.dart';
-import 'screens/financial_report_viewer_screen.dart';
+import 'screens/executive/financial_overview_screen.dart';
+import 'screens/executive/financial_report_generation_screen.dart';
 import 'screens/notification_settings_screen.dart';
-import 'screens/user_profile_management_screen.dart';
+import 'screens/member/user_profile_management_screen.dart';
 import 'screens/notification_view_screen.dart';
-import 'screens/membership_status_management_screen.dart';
 import 'screens/auth/auth_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -193,16 +190,6 @@ class _MyHomePageState extends State<MyHomePage> {
         screen: ClubExecutiveDashboardScreen(),
       ),
       ScreenItem(
-        title: 'Club Management',
-        icon: Icons.apartment,
-        screen: ClubExecutiveClubManagementScreen(),
-      ),
-      // ScreenItem(
-      //   title: 'Club Management (Admin)',
-      //   icon: Icons.admin_panel_settings,
-      //   screen: ClubManagementForAdminsScreen(),
-      // ),
-      ScreenItem(
         title: 'Member Dashboard',
         icon: Icons.people,
         screen: MemberDashboardScreen(),
@@ -210,17 +197,12 @@ class _MyHomePageState extends State<MyHomePage> {
       ScreenItem(
         title: 'Financial Overview',
         icon: Icons.account_balance_wallet,
-        screen: FinancialOverviewScreen(),
+        screen: FinancialOverviewScreen(token: null, clubId: null),
       ),
       ScreenItem(
         title: 'Financial Report Generation',
         icon: Icons.assessment,
-        screen: FinancialReportGenerationScreen(),
-      ),
-      ScreenItem(
-        title: 'Financial Report Viewer',
-        icon: Icons.description,
-        screen: FinancialReportViewerScreen(),
+        screen: FinancialReportGenerationScreen(token: null, clubId: null),
       ),
       ScreenItem(
         title: 'Notification Settings',
@@ -230,17 +212,12 @@ class _MyHomePageState extends State<MyHomePage> {
       ScreenItem(
         title: 'User Profile Management',
         icon: Icons.person,
-        screen: UserProfileManagementScreen(),
+        screen: UserProfileManagementScreen(token: null),
       ),
       ScreenItem(
         title: 'Notification View',
         icon: Icons.mail,
         screen: NotificationViewScreen(),
-      ),
-      ScreenItem(
-        title: 'Membership Status Management',
-        icon: Icons.card_membership,
-        screen: MembershipStatusManagementScreen(),
       ),
     ];
   }
