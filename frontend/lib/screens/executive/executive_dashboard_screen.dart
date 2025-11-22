@@ -562,7 +562,7 @@ class _ClubExecutiveDashboardScreenState
                 );
                 break;
               case 1:
-                // Members - navigate to ClubExecutiveClubManagementScreen
+                // Members - navigate to ClubDetailScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -572,7 +572,7 @@ class _ClubExecutiveDashboardScreenState
                 );
                 break;
               case 2:
-                // Finances - navigate to FinanceTransactionsScreen
+                // Finances - navigate to FinancialOverviewScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(

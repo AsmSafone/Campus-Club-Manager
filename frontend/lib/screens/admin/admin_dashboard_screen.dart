@@ -656,6 +656,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Pending':
+        return Colors.orange;
+      case 'Guest':
+        return Colors.blue;
+      case 'Active':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildUserCard(Map<String, dynamic> user) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -674,7 +687,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    user['role'],
+                    user['role'] ?? 'No Role',
                     style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ],
@@ -683,12 +696,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.2),
+                color: _getStatusColor(user['status']).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 user['status'],
-                style: const TextStyle(color: Colors.green, fontSize: 11),
+                style: TextStyle(
+                  color: _getStatusColor(user['status']),
+                  fontSize: 11,
+                ),
               ),
             ),
           ],

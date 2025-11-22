@@ -20,6 +20,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
   List<Member> _filtered = [];
   bool _loading = false;
   bool _isMember = false;
+  bool _hasPendingRequest = false;
   bool _actionLoading = false;
   final String _apiBase = ApiConfig.baseUrl;
 
@@ -29,6 +30,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
     _searchController.addListener(_onSearch);
     _loadMembers();
     _checkMembership();
+    _checkPendingRequest();
   }
 
   @override
@@ -81,13 +83,21 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
       });
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
-        if (data is Map && (data['member'] != null)) {
-          setState(() => _isMember = data['member'] == true);
+        if (data is Map) {
+          setState(() {
+            _isMember = data['member'] == true;
+            _hasPendingRequest = data['pendingRequest'] == true;
+          });
         }
       }
     } catch (e) {
       // ignore - membership endpoint optional
     }
+  }
+
+  Future<void> _checkPendingRequest() async {
+    // This is now handled in _checkMembership
+    await _checkMembership();
   }
 
   @override
@@ -219,15 +229,36 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
           child: SizedBox(
             width: 220,
             child: ElevatedButton(
-              onPressed: _actionLoading ? null : () => _isMember ? _leaveClub() : _joinClub(),
+              onPressed: _actionLoading ? null : () {
+                if (_isMember) {
+                  _leaveClub();
+                } else if (_hasPendingRequest) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Your request is pending approval')),
+                  );
+                } else {
+                  _joinClub();
+                }
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: _isMember ? Colors.red : const Color(0xFF137FEC),
+                backgroundColor: _isMember 
+                    ? Colors.red 
+                    : _hasPendingRequest 
+                        ? Colors.orange 
+                        : const Color(0xFF137FEC),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: _actionLoading
                   ? SizedBox(height: 16, width: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text(_isMember ? 'Leave Club' : 'Join Club', style: const TextStyle(color: Colors.white, fontSize: 16)),
+                  : Text(
+                      _isMember 
+                          ? 'Leave Club' 
+                          : _hasPendingRequest 
+                              ? 'Request Pending' 
+                              : 'Join Club', 
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
             ),
           ),
         ),
@@ -369,15 +400,53 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',
       });
-      if (resp.statusCode == 200 || resp.statusCode == 201 || resp.statusCode == 204) {
-        setState(() => _isMember = true);
-        await _loadMembers();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('You joined ${widget.club.name}')));
+      
+      final responseBody = resp.body.isNotEmpty ? json.decode(resp.body) : {};
+      
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        // Request submitted successfully
+        setState(() {
+          _hasPendingRequest = true;
+          _isMember = false; // Not a member yet, just requested
+        });
+        
+        // Refresh membership status to get updated pending request state
+        await _checkMembership();
+        
+        final message = responseBody['message'] ?? 'Join request submitted successfully';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      } else if (resp.statusCode == 400) {
+        // Handle error cases
+        final errorMessage = responseBody['message'] ?? 'Failed to submit join request';
+        if (errorMessage.contains('already pending')) {
+          setState(() => _hasPendingRequest = true);
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.orange,
+          ),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to join club')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseBody['message'] ?? 'Failed to submit join request'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       setState(() => _actionLoading = false);
     }

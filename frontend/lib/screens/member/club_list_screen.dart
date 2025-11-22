@@ -321,52 +321,6 @@ class _ClubListScreenState extends State<ClubListScreen> {
     );
   }
 
-  void _showClubMenu(Club club) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF192734),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.visibility),
-            title: const Text('View Details'),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => ClubExecutiveClubManagementScreen()));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.edit),
-            title: const Text('Edit Club'),
-            onTap: () {
-              Navigator.pop(context);
-              _editClub(club);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.check_circle, color: Colors.green),
-            title: const Text('Approve'),
-            onTap: () {
-              Navigator.pop(context);
-              _approveClub(club);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.block, color: Colors.orange),
-            title: const Text('Suspend'),
-            onTap: () {
-              Navigator.pop(context);
-              _suspendClub(club);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _editClub(Club club) async {
     if (widget.token == null) return;
     setState(() => _isLoading = true);

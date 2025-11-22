@@ -193,16 +193,6 @@ class _MyHomePageState extends State<MyHomePage> {
         screen: ClubExecutiveDashboardScreen(),
       ),
       ScreenItem(
-        title: 'Club Management',
-        icon: Icons.apartment,
-        screen: ClubExecutiveClubManagementScreen(),
-      ),
-      // ScreenItem(
-      //   title: 'Club Management (Admin)',
-      //   icon: Icons.admin_panel_settings,
-      //   screen: ClubManagementForAdminsScreen(),
-      // ),
-      ScreenItem(
         title: 'Member Dashboard',
         icon: Icons.people,
         screen: MemberDashboardScreen(),
@@ -218,11 +208,6 @@ class _MyHomePageState extends State<MyHomePage> {
         screen: FinancialReportGenerationScreen(),
       ),
       ScreenItem(
-        title: 'Financial Report Viewer',
-        icon: Icons.description,
-        screen: FinancialReportViewerScreen(),
-      ),
-      ScreenItem(
         title: 'Notification Settings',
         icon: Icons.notifications_active,
         screen: NotificationSettingsScreen(),
@@ -236,11 +221,6 @@ class _MyHomePageState extends State<MyHomePage> {
         title: 'Notification View',
         icon: Icons.mail,
         screen: NotificationViewScreen(),
-      ),
-      ScreenItem(
-        title: 'Membership Status Management',
-        icon: Icons.card_membership,
-        screen: MembershipStatusManagementScreen(),
       ),
     ];
   }
