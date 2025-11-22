@@ -24,10 +24,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `club`
+-- Table structure for table `Club`
 --
 
-CREATE TABLE `club` (
+CREATE TABLE `Club` (
   `club_id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
@@ -35,10 +35,10 @@ CREATE TABLE `club` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `club`
+-- Dumping data for table `Club`
 --
 
-INSERT INTO `club` (`club_id`, `name`, `description`, `founded_date`) VALUES
+INSERT INTO `Club` (`club_id`, `name`, `description`, `founded_date`) VALUES
 (1, 'Debate Club', 'A club for debate enthusiasts.', '2020-01-15'),
 (3, 'Programming Club', 'A club for coding enthusiasts.', '2021-09-10'),
 (4, 'Cultural Club', 'A club to celebrate diverse cultures.', '2018-11-05');
@@ -46,10 +46,10 @@ INSERT INTO `club` (`club_id`, `name`, `description`, `founded_date`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `clubrequest`
+-- Table structure for table `ClubRequest`
 --
 
-CREATE TABLE `clubrequest` (
+CREATE TABLE `ClubRequest` (
   `request_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `club_id` int(11) NOT NULL,
@@ -58,20 +58,20 @@ CREATE TABLE `clubrequest` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `clubrequest`
+-- Dumping data for table `ClubRequest`
 --
 
-INSERT INTO `clubrequest` (`request_id`, `user_id`, `club_id`, `status`, `requested_at`) VALUES
+INSERT INTO `ClubRequest` (`request_id`, `user_id`, `club_id`, `status`, `requested_at`) VALUES
 (2, 3, 4, 'Pending', '2025-11-22 08:27:31'),
 (3, 3, 1, 'Approved', '2025-11-22 09:03:52');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `event`
+-- Table structure for table `Event`
 --
 
-CREATE TABLE `event` (
+CREATE TABLE `Event` (
   `event_id` int(11) NOT NULL,
   `club_id` int(11) DEFAULT NULL,
   `title` varchar(150) NOT NULL,
@@ -81,19 +81,19 @@ CREATE TABLE `event` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `event`
+-- Dumping data for table `Event`
 --
 
-INSERT INTO `event` (`event_id`, `club_id`, `title`, `description`, `date`, `venue`) VALUES
+INSERT INTO `Event` (`event_id`, `club_id`, `title`, `description`, `date`, `venue`) VALUES
 (5, 3, 'IUPC 2025', 'Showcase your coding brilliance and teamwork in the Intra-University Programming Contest 2025!\r\nJoin the most exciting battle of logic, algorithms, and speed — and win amazing rewards while having fun with your teammates! 💻🔥\r\n🧠 Organized by: Programming Club, USTC\r\n⚙️ Powered by: Department of Computer Science and Engineering, USTC\r\n\r\n🏁 Contest Highlights\r\n👕 Exclusive T-Shirt for all registered participants\r\n💵 Attractive Crest & Cash Prizes for winning teams\r\n🏅 Certificates for all participants and winners\r\n🍱 Lunch & Refreshments will be provided during the contest\r\n\r\n🏁 Contest Requirements\r\n👥 Participation: Solo or Team\r\n🧩 Team Size: Minimum 1, Maximum 3 members\r\n💰 Registration Fee: Solo = 300 TK, Team = 900 TK\r\n🏫 Eligibility: Only for current students of USTC\r\n\r\n🗓️ Registration Deadline: 18 October 2025\r\n🗓️ Mock Contest Schedule: 7 November 2025\r\n🗓️ Main Contest Schedule: 10 November 2025\r\n\r\n🏁 Registration Link: https://forms.gle/5DVYPamMSWg5TZdEA', '2025-11-28', 'USTC D Block, Khulsi');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `finance`
+-- Table structure for table `Finance`
 --
 
-CREATE TABLE `finance` (
+CREATE TABLE `Finance` (
   `finance_id` int(11) NOT NULL,
   `club_id` int(11) DEFAULT NULL,
   `type` enum('Income','Expense') NOT NULL,
@@ -103,10 +103,10 @@ CREATE TABLE `finance` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `finance`
+-- Dumping data for table `Finance`
 --
 
-INSERT INTO `finance` (`finance_id`, `club_id`, `type`, `amount`, `date`, `description`) VALUES
+INSERT INTO `Finance` (`finance_id`, `club_id`, `type`, `amount`, `date`, `description`) VALUES
 (1, 3, 'Income', 500.00, '2025-02-01', 'Membership Fees'),
 (2, 3, 'Expense', 200.00, '2025-02-15', 'Event Supplies'),
 (4, 3, 'Expense', 150.00, '2025-03-20', 'Venue Booking');
@@ -114,10 +114,10 @@ INSERT INTO `finance` (`finance_id`, `club_id`, `type`, `amount`, `date`, `descr
 -- --------------------------------------------------------
 
 --
--- Table structure for table `membership`
+-- Table structure for table `Membership`
 --
 
-CREATE TABLE `membership` (
+CREATE TABLE `Membership` (
   `membership_id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `club_id` int(11) DEFAULT NULL,
@@ -126,10 +126,10 @@ CREATE TABLE `membership` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `membership`
+-- Dumping data for table `Membership`
 --
 
-INSERT INTO `membership` (`membership_id`, `user_id`, `club_id`, `role`, `join_date`) VALUES
+INSERT INTO `Membership` (`membership_id`, `user_id`, `club_id`, `role`, `join_date`) VALUES
 (1, 2, 3, 'President', '2020-02-01'),
 (5, 3, 3, 'Member', '2025-11-22'),
 (11, 3, 1, 'Member', '2025-11-22');
@@ -137,10 +137,10 @@ INSERT INTO `membership` (`membership_id`, `user_id`, `club_id`, `role`, `join_d
 -- --------------------------------------------------------
 
 --
--- Table structure for table `notification`
+-- Table structure for table `Notification`
 --
 
-CREATE TABLE `notification` (
+CREATE TABLE `Notification` (
   `id` int(11) NOT NULL,
   `club_id` int(11) NOT NULL,
   `title` varchar(200) NOT NULL,
@@ -148,19 +148,19 @@ CREATE TABLE `notification` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `notification`
+-- Dumping data for table `Notification`
 --
 
-INSERT INTO `notification` (`id`, `club_id`, `title`, `description`) VALUES
+INSERT INTO `Notification` (`id`, `club_id`, `title`, `description`) VALUES
 (2, 3, 'Welcome!', 'Welcome to our app!');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `registration`
+-- Table structure for table `Registration`
 --
 
-CREATE TABLE `registration` (
+CREATE TABLE `Registration` (
   `reg_id` int(11) NOT NULL,
   `event_id` int(11) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
@@ -168,19 +168,19 @@ CREATE TABLE `registration` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `registration`
+-- Dumping data for table `Registration`
 --
 
-INSERT INTO `registration` (`reg_id`, `event_id`, `user_id`, `status`) VALUES
+INSERT INTO `Registration` (`reg_id`, `event_id`, `user_id`, `status`) VALUES
 (5, 5, 3, 'Registered');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user`
+-- Table structure for table `User`
 --
 
-CREATE TABLE `user` (
+CREATE TABLE `User` (
   `user_id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
@@ -189,10 +189,10 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `user`
+-- Dumping data for table `User`
 --
 
-INSERT INTO `user` (`user_id`, `name`, `email`, `password`, `role`) VALUES
+INSERT INTO `User` (`user_id`, `name`, `email`, `password`, `role`) VALUES
 (1, 'Administration', 'admin@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Admin'),
 (2, 'Executive User', 'executive@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Executive'),
 (3, 'Member User', 'member@gmail.com', '$2a$12$Aj0bUAOQJ3Jesk6/GyAjZ.mMxWroMXC5bXHpT.hRQXNH/lYlzWWU6', 'Member');
@@ -202,60 +202,60 @@ INSERT INTO `user` (`user_id`, `name`, `email`, `password`, `role`) VALUES
 --
 
 --
--- Indexes for table `club`
+-- Indexes for table `Club`
 --
-ALTER TABLE `club`
+ALTER TABLE `Club`
   ADD PRIMARY KEY (`club_id`);
 
 --
--- Indexes for table `clubrequest`
+-- Indexes for table `ClubRequest`
 --
-ALTER TABLE `clubrequest`
+ALTER TABLE `ClubRequest`
   ADD PRIMARY KEY (`request_id`),
   ADD UNIQUE KEY `unique_pending_request` (`user_id`,`club_id`,`status`),
   ADD KEY `club_id` (`club_id`);
 
 --
--- Indexes for table `event`
+-- Indexes for table `Event`
 --
-ALTER TABLE `event`
+ALTER TABLE `Event`
   ADD PRIMARY KEY (`event_id`),
   ADD KEY `club_id` (`club_id`);
 
 --
--- Indexes for table `finance`
+-- Indexes for table `Finance`
 --
-ALTER TABLE `finance`
+ALTER TABLE `Finance`
   ADD PRIMARY KEY (`finance_id`),
   ADD KEY `club_id` (`club_id`);
 
 --
--- Indexes for table `membership`
+-- Indexes for table `Membership`
 --
-ALTER TABLE `membership`
+ALTER TABLE `Membership`
   ADD PRIMARY KEY (`membership_id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `club_id` (`club_id`);
 
 --
--- Indexes for table `notification`
+-- Indexes for table `Notification`
 --
-ALTER TABLE `notification`
+ALTER TABLE `Notification`
   ADD PRIMARY KEY (`id`),
   ADD KEY `club_id` (`club_id`);
 
 --
--- Indexes for table `registration`
+-- Indexes for table `Registration`
 --
-ALTER TABLE `registration`
+ALTER TABLE `Registration`
   ADD PRIMARY KEY (`reg_id`),
   ADD KEY `event_id` (`event_id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `user`
+-- Indexes for table `User`
 --
-ALTER TABLE `user`
+ALTER TABLE `User`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `email` (`email`);
 
@@ -264,51 +264,51 @@ ALTER TABLE `user`
 --
 
 --
--- AUTO_INCREMENT for table `club`
+-- AUTO_INCREMENT for table `Club`
 --
-ALTER TABLE `club`
+ALTER TABLE `Club`
   MODIFY `club_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT for table `clubrequest`
+-- AUTO_INCREMENT for table `ClubRequest`
 --
-ALTER TABLE `clubrequest`
+ALTER TABLE `ClubRequest`
   MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `event`
+-- AUTO_INCREMENT for table `Event`
 --
-ALTER TABLE `event`
+ALTER TABLE `Event`
   MODIFY `event_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `finance`
+-- AUTO_INCREMENT for table `Finance`
 --
-ALTER TABLE `finance`
+ALTER TABLE `Finance`
   MODIFY `finance_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `membership`
+-- AUTO_INCREMENT for table `Membership`
 --
-ALTER TABLE `membership`
+ALTER TABLE `Membership`
   MODIFY `membership_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
--- AUTO_INCREMENT for table `notification`
+-- AUTO_INCREMENT for table `Notification`
 --
-ALTER TABLE `notification`
+ALTER TABLE `Notification`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `registration`
+-- AUTO_INCREMENT for table `Registration`
 --
-ALTER TABLE `registration`
+ALTER TABLE `Registration`
   MODIFY `reg_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `user`
+-- AUTO_INCREMENT for table `User`
 --
-ALTER TABLE `user`
+ALTER TABLE `User`
   MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
@@ -316,43 +316,43 @@ ALTER TABLE `user`
 --
 
 --
--- Constraints for table `clubrequest`
+-- Constraints for table `ClubRequest`
 --
-ALTER TABLE `clubrequest`
-  ADD CONSTRAINT `clubrequest_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `clubrequest_ibfk_2` FOREIGN KEY (`club_id`) REFERENCES `club` (`club_id`) ON DELETE CASCADE;
+ALTER TABLE `ClubRequest`
+  ADD CONSTRAINT `clubrequest_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `clubrequest_ibfk_2` FOREIGN KEY (`club_id`) REFERENCES `Club` (`club_id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `event`
+-- Constraints for table `Event`
 --
-ALTER TABLE `event`
-  ADD CONSTRAINT `event_ibfk_1` FOREIGN KEY (`club_id`) REFERENCES `club` (`club_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `Event`
+  ADD CONSTRAINT `event_ibfk_1` FOREIGN KEY (`club_id`) REFERENCES `Club` (`club_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `finance`
+-- Constraints for table `Finance`
 --
-ALTER TABLE `finance`
-  ADD CONSTRAINT `finance_ibfk_1` FOREIGN KEY (`club_id`) REFERENCES `club` (`club_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `Finance`
+  ADD CONSTRAINT `finance_ibfk_1` FOREIGN KEY (`club_id`) REFERENCES `Club` (`club_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `membership`
+-- Constraints for table `Membership`
 --
-ALTER TABLE `membership`
-  ADD CONSTRAINT `membership_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `membership_ibfk_2` FOREIGN KEY (`club_id`) REFERENCES `club` (`club_id`) ON DELETE CASCADE;
+ALTER TABLE `Membership`
+  ADD CONSTRAINT `membership_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `membership_ibfk_2` FOREIGN KEY (`club_id`) REFERENCES `Club` (`club_id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `notification`
+-- Constraints for table `Notification`
 --
-ALTER TABLE `notification`
-  ADD CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`club_id`) REFERENCES `club` (`club_id`) ON DELETE CASCADE;
+ALTER TABLE `Notification`
+  ADD CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`club_id`) REFERENCES `Club` (`club_id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `registration`
+-- Constraints for table `Registration`
 --
-ALTER TABLE `registration`
-  ADD CONSTRAINT `registration_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `event` (`event_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `registration_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `Registration`
+  ADD CONSTRAINT `registration_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `Event` (`event_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `registration_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

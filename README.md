@@ -461,6 +461,28 @@ The frontend API endpoint is configured in `lib/config/api_config.dart`. Update 
 - Check Dart SDK version matches `pubspec.yaml` requirements
 - Run `flutter doctor` to check for issues
 
+**Problem: Web build fails with "Couldn't resolve the package 'frontend'"**
+- This is a build cache issue. Clean and rebuild:
+  ```bash
+  flutter clean
+  flutter pub get
+  flutter build web
+  ```
+- If the issue persists, delete the `.dart_tool` folder and rebuild:
+  ```bash
+  # Windows
+  rmdir /s /q .dart_tool
+  # macOS/Linux
+  rm -rf .dart_tool
+  
+  flutter pub get
+  flutter build web
+  ```
+- For web builds, you can also try:
+  ```bash
+  flutter build web --no-wasm-dry-run
+  ```
+
 **Problem: Android/iOS build fails**
 - For Android: Ensure Android SDK is installed and configured
 - For iOS: Ensure Xcode is installed (macOS only)
@@ -526,9 +548,18 @@ The frontend API endpoint is configured in `lib/config/api_config.dart`. Update 
 - Update API URL to production endpoint
 - Build release version:
   ```bash
+  # Clean build cache first
+  flutter clean
+  flutter pub get
+  
+  # Build for different platforms
   flutter build web
   flutter build apk --release
   flutter build ios --release
+  ```
+- **Note**: If you encounter package resolution errors during web build, use:
+  ```bash
+  flutter build web --no-wasm-dry-run
   ```
 
 ## Contributing
