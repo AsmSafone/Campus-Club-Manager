@@ -37,11 +37,11 @@ class MyApp extends StatelessWidget {
           elevation: 1,
         ),
       ),
-      home: Startup(),
+      home: const Startup(),
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/auth':
-            return MaterialPageRoute(builder: (context) => AuthEntry());
+            return MaterialPageRoute(builder: (context) => const AuthEntry());
           case '/home':
             return MaterialPageRoute(
               builder: (context) =>
@@ -72,7 +72,7 @@ class MyApp extends StatelessWidget {
               ),
             );
           default:
-            return MaterialPageRoute(builder: (context) => AuthScreen());
+            return MaterialPageRoute(builder: (context) => const AuthScreen());
         }
       },
     );
@@ -81,56 +81,85 @@ class MyApp extends StatelessWidget {
 
 /// Startup widget that restores saved auth (if any) and navigates to the right dashboard.
 class Startup extends StatefulWidget {
+  const Startup({Key? key}) : super(key: key);
+
   @override
-  _StartupState createState() => _StartupState();
+  State<Startup> createState() => _StartupState();
 }
 
 class _StartupState extends State<Startup> {
+  bool _checking = true;
+
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuth();
+    });
   }
 
   Future<void> _checkAuth() async {
+    if (!mounted) return;
+    
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
       final userJson = prefs.getString('auth_user');
-      if (token != null && token.isNotEmpty && userJson != null) {
-        final user = jsonDecode(userJson) as Map<String, dynamic>;
-        final role = (user['role'] ?? '').toString();
-        // navigate to appropriate dashboard
-        if (role == 'Admin') {
-          Navigator.of(context).pushReplacementNamed('/admin-dashboard', arguments: {'token': token, 'user': user});
+      
+      if (!mounted) return;
+      
+      if (token != null && token.isNotEmpty && userJson != null && userJson.isNotEmpty) {
+        try {
+          final user = jsonDecode(userJson) as Map<String, dynamic>;
+          final role = (user['role'] ?? '').toString();
+          
+          if (!mounted) return;
+          
+          // navigate to appropriate dashboard
+          if (role == 'Admin') {
+            Navigator.of(context).pushReplacementNamed('/admin-dashboard', arguments: {'token': token, 'user': user});
+            return;
+          }
+          if (role == 'Executive') {
+            Navigator.of(context).pushReplacementNamed('/executive-dashboard', arguments: {'token': token, 'user': user});
+            return;
+          }
+          // default to member
+          Navigator.of(context).pushReplacementNamed('/member-dashboard', arguments: {'token': token, 'user': user});
           return;
+        } catch (e) {
+          // Invalid user JSON, clear and go to auth
+          await prefs.remove('auth_token');
+          await prefs.remove('auth_user');
         }
-        if (role == 'Executive') {
-          Navigator.of(context).pushReplacementNamed('/executive-dashboard', arguments: {'token': token, 'user': user});
-          return;
-        }
-        // default to member
-        Navigator.of(context).pushReplacementNamed('/member-dashboard', arguments: {'token': token, 'user': user});
-        return;
       }
-    } catch (_) {}
+    } catch (e) {
+      // Error reading prefs, continue to auth
+    }
 
+    if (!mounted) return;
+    
     // No saved auth — go to AuthScreen
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => AuthScreen()));
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const AuthScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+    return const Scaffold(
+      backgroundColor: Color(0xFF101922),
+      body: Center(
+        child: CircularProgressIndicator(color: Color(0xFF137FEC)),
+      ),
     );
   }
 }
 
 /// When navigating to `/auth`, clear stored credentials then show AuthScreen.
 class AuthEntry extends StatefulWidget {
+  const AuthEntry({Key? key}) : super(key: key);
+
   @override
-  _AuthEntryState createState() => _AuthEntryState();
+  State<AuthEntry> createState() => _AuthEntryState();
 }
 
 class _AuthEntryState extends State<AuthEntry> {
@@ -148,13 +177,20 @@ class _AuthEntryState extends State<AuthEntry> {
       await prefs.remove('auth_token');
       await prefs.remove('auth_user');
     } catch (_) {}
-    setState(() => _cleared = true);
+    if (mounted) {
+      setState(() => _cleared = true);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_cleared) return Scaffold(body: Center(child: CircularProgressIndicator()));
-    return AuthScreen();
+    if (!_cleared) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF101922),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF137FEC))),
+      );
+    }
+    return const AuthScreen();
   }
 }
 

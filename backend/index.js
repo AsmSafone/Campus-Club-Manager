@@ -371,6 +371,65 @@ app.get('/api/users/list', verifyToken, async (req, res) => {
     }
 });
 
+// Delete user (admin only)
+app.delete('/api/admin/users/:userId', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const { userId } = req.params;
+        const adminUserId = req.user.userId;
+
+        // Check if requester is admin
+        const [adminCheck] = await pool.query('SELECT role FROM User WHERE user_id = ?', [adminUserId]);
+        if (!adminCheck.length || adminCheck[0].role !== 'Admin') {
+            return res.status(403).json({ message: 'Only admins can delete users' });
+        }
+
+        // Prevent admin from deleting themselves
+        if (parseInt(userId) === adminUserId) {
+            return res.status(400).json({ message: 'Cannot delete your own account' });
+        }
+
+        // Check if user exists
+        const [userCheck] = await pool.query('SELECT user_id, name, role FROM User WHERE user_id = ?', [userId]);
+        if (!userCheck.length) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Start transaction
+        await pool.query('START TRANSACTION');
+
+        try {
+            // Delete user's memberships
+            await pool.query('DELETE FROM Membership WHERE user_id = ?', [userId]);
+
+            // Delete user's club requests
+            await pool.query('DELETE FROM ClubRequest WHERE user_id = ?', [userId]);
+
+            // Delete user's event registrations
+            await pool.query('DELETE FROM EventRegistration WHERE user_id = ?', [userId]);
+
+            // Delete user's notification settings
+            await pool.query('DELETE FROM NotificationSettings WHERE user_id = ?', [userId]);
+
+            // Delete user's notifications (if they are the target)
+            await pool.query('DELETE FROM Notification WHERE user_id = ?', [userId]);
+
+            // Finally delete the user
+            await pool.query('DELETE FROM User WHERE user_id = ?', [userId]);
+
+            await pool.query('COMMIT');
+
+            res.json({ message: `User "${userCheck[0].name}" deleted successfully` });
+        } catch (err) {
+            await pool.query('ROLLBACK');
+            throw err;
+        }
+    } catch (err) {
+        console.error('Delete user error:', err);
+        res.status(500).json({ error: 'Failed to delete user', details: err.message });
+    }
+});
+
 // Approve club (set status by adding founder membership)
 app.patch('/api/clubs/:clubId/approve', verifyToken, async (req, res) => {
     try {
@@ -740,27 +799,20 @@ app.post('/api/clubs/:clubId/members', verifyToken, async (req, res) => {
     try {
         const pool = await poolPromise;
         const { clubId } = req.params;
-        const { email, name } = req.body;
+        const { email } = req.body;
         
-        if (!email || !name) {
-            return res.status(400).json({ message: 'Email and name are required' });
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
         }
         
         // Check if user exists
-        const [existingUser] = await pool.query('SELECT user_id FROM User WHERE email = ?', [email]);
+        const [existingUser] = await pool.query('SELECT user_id, name FROM User WHERE email = ?', [email]);
         let userId;
         
         if (existingUser.length > 0) {
             userId = existingUser[0].user_id;
         } else {
             return res.status(400).json({ message: 'User does not exist. Please ask the user to sign up first.' });
-            // Create new user with default password
-            // const hashedPassword = await bcrypt.hash('DefaultPassword123', 10);
-            // const [result] = await pool.query(
-            //     'INSERT INTO User (name, email, password, role) VALUES (?, ?, ?, ?)',
-            //     [name, email, hashedPassword, 'Member']
-            // );
-            // userId = result.insertId;
         }
         
         // Check if already a member
@@ -833,6 +885,13 @@ app.put('/api/clubs/:clubId/members/:membershipId', verifyToken, async (req, res
             [role, membershipId]
         );
 
+        // Check if user is an Admin - don't change their role
+        const [userRows] = await pool.query('SELECT role FROM User WHERE user_id = ?', [userId]);
+        if (userRows.length > 0 && userRows[0].role === 'Admin') {
+            // Admin role is preserved, don't change it
+            return res.json({ message: 'Member role updated successfully' });
+        }
+
         // Recalculate user's global role: if they have any executive memberships remain, set to Executive, otherwise Member
         const [execCountRows] = await pool.query(
             'SELECT COUNT(*) as cnt FROM Membership WHERE user_id = ? AND role != ?',
@@ -858,9 +917,9 @@ app.delete('/api/clubs/:clubId/members/:membershipId', verifyToken, async (req, 
         const pool = await poolPromise;
         const { clubId, membershipId } = req.params;
         
-        // Verify membership belongs to the club
+        // Verify membership belongs to the club and get user_id
         const [membership] = await pool.query(
-            'SELECT membership_id FROM Membership WHERE membership_id = ? AND club_id = ?',
+            'SELECT membership_id, user_id FROM Membership WHERE membership_id = ? AND club_id = ?',
             [membershipId, clubId]
         );
         
@@ -868,8 +927,44 @@ app.delete('/api/clubs/:clubId/members/:membershipId', verifyToken, async (req, 
             return res.status(404).json({ message: 'Membership not found' });
         }
         
+        const userId = membership[0].user_id;
+        
         // Delete membership
         await pool.query('DELETE FROM Membership WHERE membership_id = ?', [membershipId]);
+        
+        // Check if user is an Admin - don't change their role
+        const [userRows] = await pool.query('SELECT role FROM User WHERE user_id = ?', [userId]);
+        if (userRows.length > 0 && userRows[0].role === 'Admin') {
+            // Admin role is preserved, don't change it
+            return res.json({ message: 'Member removed successfully' });
+        }
+        
+        // Recalculate user's global role: if they have any executive memberships remaining, set to Executive
+        // If they have any memberships, set to Member, otherwise set to Guest
+        const [execCountRows] = await pool.query(
+            'SELECT COUNT(*) as cnt FROM Membership WHERE user_id = ? AND role != ?',
+            [userId, 'Member']
+        );
+        const [memberCountRows] = await pool.query(
+            'SELECT COUNT(*) as cnt FROM Membership WHERE user_id = ?',
+            [userId]
+        );
+        const execCount = execCountRows[0].cnt || 0;
+        const memberCount = memberCountRows[0].cnt || 0;
+        
+        let newUserRole;
+        if (execCount > 0) {
+            newUserRole = 'Executive';
+        } else if (memberCount > 0) {
+            newUserRole = 'Member';
+        } else {
+            newUserRole = 'Guest';
+        }
+        
+        await pool.query(
+            'UPDATE User SET role = ? WHERE user_id = ?',
+            [newUserRole, userId]
+        );
         
         res.json({ message: 'Member removed successfully' });
     } catch (err) {
@@ -1121,12 +1216,12 @@ app.get('/api/notifications/settings', verifyToken, async (req, res) => {
                 email_notifications: false,
                 push: true,
                 push_notifications: true,
-                pushNotifications: true,
-                emailNotifications: false,
-                clubAnnouncements: true,
-                newEventAnnouncements: true,
-                rsvpEventReminders: true,
-                reminderTime: '2 hours before'
+            pushNotifications: true,
+            emailNotifications: false,
+            clubAnnouncements: true,
+            newEventAnnouncements: true,
+            rsvpEventReminders: true,
+            reminderTime: '2 hours before'
             });
         }
     } catch (err) {
@@ -1412,6 +1507,41 @@ app.post('/api/clubs/:clubId/leave', verifyToken, async (req, res) => {
         if (!userId) return res.status(401).json({ message: 'Invalid user' });
 
         await pool.query('DELETE FROM Membership WHERE club_id = ? and user_id = ?', [clubId, userId]);
+        
+        // Check if user is an Admin - don't change their role
+        const [userRows] = await pool.query('SELECT role FROM User WHERE user_id = ?', [userId]);
+        if (userRows.length > 0 && userRows[0].role === 'Admin') {
+            // Admin role is preserved, don't change it
+            return res.json({ message: 'Left club successfully' });
+        }
+        
+        // Recalculate user's global role: if they have any executive memberships remaining, set to Executive
+        // If they have any memberships, set to Member, otherwise set to Guest
+        const [execCountRows] = await pool.query(
+            'SELECT COUNT(*) as cnt FROM Membership WHERE user_id = ? AND role != ?',
+            [userId, 'Member']
+        );
+        const [memberCountRows] = await pool.query(
+            'SELECT COUNT(*) as cnt FROM Membership WHERE user_id = ?',
+            [userId]
+        );
+        const execCount = execCountRows[0].cnt || 0;
+        const memberCount = memberCountRows[0].cnt || 0;
+        
+        let newUserRole;
+        if (execCount > 0) {
+            newUserRole = 'Executive';
+        } else if (memberCount > 0) {
+            newUserRole = 'Member';
+        } else {
+            newUserRole = 'Guest';
+        }
+        
+        await pool.query(
+            'UPDATE User SET role = ? WHERE user_id = ?',
+            [newUserRole, userId]
+        );
+        
         res.json({ message: 'Left club successfully' });
     } catch (err) {
         console.error('Leave club error:', err);
@@ -1637,5 +1767,3 @@ app.post('/api/clubs/:clubId/notifications', verifyToken, async (req, res) => {
         res.status(500).json({ error: 'Failed to create notification' });
     }
 });
-
-// removed event reminder endpoint (simplified notifications)

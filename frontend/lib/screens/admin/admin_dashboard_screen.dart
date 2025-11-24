@@ -300,6 +300,170 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> _deleteUser(int userId, String userName) async {
+    try {
+      final headers = {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json',
+      };
+
+      final response = await http.delete(
+        Uri.parse('$_apiBaseUrl/api/admin/users/$userId'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('User "$userName" deleted successfully'),
+            backgroundColor: Colors.green[700],
+          ),
+        );
+        _loadDashboardData();
+      } else {
+        final error = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error['message'] ?? 'Failed to delete user'),
+            backgroundColor: Colors.red[700],
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red[700],
+        ),
+      );
+    }
+  }
+
+  void _showDeleteUserConfirmation(Map<String, dynamic> user) {
+    final userId = user['user_id'];
+    final userName = user['name'] ?? 'Unknown';
+    final userRole = user['role'] ?? 'Unknown';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF192734),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.grey[800]!),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Delete User',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete this user?',
+                style: TextStyle(color: Colors.grey[300], fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF101922),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[800]!),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[700],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          userName[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            userRole,
+                            style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'This action cannot be undone. All user data, memberships, and registrations will be permanently removed.',
+                style: TextStyle(color: Colors.red[300], fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _deleteUser(userId, userName);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showAddClubModal() {
     _clubNameController.clear();
     _clubDescriptionController.clear();
@@ -367,6 +531,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             ElevatedButton(
               onPressed: () => _submitCreateClub(),
+                style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4A90E2),
+              ),
               child: const Text('Create Club'),
             ),
           ],
@@ -887,6 +1054,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildUserCard(Map<String, dynamic> user) {
     final statusColor = _getStatusColor(user['status']);
+    final isAdmin = user['role'] == 'Admin';
+    final isCurrentUser = widget.user?['id'] == user['user_id'] || 
+                          widget.user?['user_id'] == user['user_id'];
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -910,10 +1081,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               height: 48,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.grey[700]!,
-                    Colors.grey[900]!,
-                  ],
+                  colors: isAdmin 
+                      ? [Color(0xFF137FEC), Color(0xFF1E3A8A)]
+                      : [Colors.grey[700]!, Colors.grey[900]!],
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
@@ -940,14 +1110,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    user['name'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      letterSpacing: -0.3,
-                      color: Colors.white,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        user['name'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          letterSpacing: -0.3,
+                          color: Colors.white,
+                        ),
+                      ),
+                      if (isCurrentUser) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF137FEC).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'You',
+                            style: TextStyle(
+                              color: Color(0xFF137FEC),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -985,6 +1177,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ),
             ),
+            const SizedBox(width: 8),
+            // Delete button (hidden for current user)
+            if (!isCurrentUser)
+              IconButton(
+                onPressed: () => _showDeleteUserConfirmation(user),
+                icon: const Icon(Icons.delete_outline, size: 20),
+                color: Colors.red[400],
+                tooltip: 'Delete User',
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.red.withOpacity(0.1),
+                  padding: const EdgeInsets.all(8),
+                ),
+              )
+            else
+              const SizedBox(width: 40), // Placeholder for alignment
           ],
         ),
       ),
