@@ -109,123 +109,138 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
   Widget build(BuildContext context) {
     final club = widget.club;
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(64),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey[800]!)),
-            color: const Color(0xFF101922),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      backgroundColor: Color(0xFF101922),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF101922),
+        elevation: 0,
+        toolbarHeight: 0,
+      ),
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                    onPressed: () => Navigator.pop(context),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
                   ),
+                  SizedBox(width: 12),
                   Expanded(
-                    child: Center(
-                      child: Text(
-                        'Club Details',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                    child: Text(
+                      'Club Details',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
-                  // keep space on the right to balance the back button
-                  const SizedBox(width: 48),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Club header card (icon, name, count)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF162028),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade800),
-              ),
-              child: Row(
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Club header card (icon, name, count)
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade700,
-                      borderRadius: BorderRadius.circular(8),
+                      color: const Color(0xFF162028),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade800),
                     ),
-                    child: Icon(Icons.group, size: 30, color: Colors.white70),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text(club.name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 4),
-                        Text('${_members.length} Executives', style: TextStyle(color: Colors.grey[400])),
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade700,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.group, size: 30, color: Colors.white70),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(club.name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 4),
+                              Text('${_members.length} Executives', style: TextStyle(color: Colors.grey[400])),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  // Search bar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF162028),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade800),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Search executives by name...',
+                        hintStyle: TextStyle(color: Colors.grey[500]),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14,horizontal: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Members list
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _filtered.isEmpty
+                          ? Center(child: Text('No executives', style: TextStyle(color: Colors.grey[500])))
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: _filtered.length,
+                              itemBuilder: (ctx, i) {
+                                final m = _filtered[i];
+                                return _buildMemberTile(m);
+                              },
+                            ),
+                  const SizedBox(height: 72),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Search bar
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF162028),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade800),
-              ),
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Search executives by name...',
-                  hintStyle: TextStyle(color: Colors.grey[500]),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14,horizontal: 12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Members list
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _filtered.isEmpty
-                      ? Center(child: Text('No executives', style: TextStyle(color: Colors.grey[500])))
-                      : ListView.builder(
-                          itemCount: _filtered.length,
-                          itemBuilder: (ctx, i) {
-                            final m = _filtered[i];
-                            return _buildMemberTile(m);
-                          },
-                        ),
-            ),
-            const SizedBox(height: 72),
-          ],
-        ),
+          ),
+        ],
       ),
       // bottom join/leave button
       floatingActionButton: SafeArea(

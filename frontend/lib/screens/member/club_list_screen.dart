@@ -83,238 +83,297 @@ class _ClubListScreenState extends State<ClubListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF101922),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(64),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey[800]!)),
-            color: const Color(0xFF101922),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF101922),
+        elevation: 0,
+        toolbarHeight: 0,
+      ),
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                    onPressed: () => Navigator.pop(context),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
                   ),
+                  SizedBox(width: 12),
                   Expanded(
-                    child: Center(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
                       child: Text(
-                        'Clubs',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                        'All Clubs',
+                        style: TextStyle(
                           color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
                         ),
                       ),
                     ),
                   ),
-                  // keep space on the right to balance the back button
-                  const SizedBox(width: 48),
+                  SizedBox(width: 48),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refreshClubs,
-        child: FutureBuilder<List<Club>>(
-          future: _clubsFuture,
-          builder: (ctx, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Search Bar
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[800]!),
-                        color: const Color(0xFF192734),
-                      ),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                            child: Icon(Icons.search, color: Colors.grey[600]),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                hintText: 'Search for a club...',
-                                hintStyle: TextStyle(color: Colors.grey[600]),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+          Expanded(
+            child: RefreshIndicator(
+              color: const Color(0xFF137FEC),
+              onRefresh: _refreshClubs,
+              child: FutureBuilder<List<Club>>(
+                future: _clubsFuture,
+                builder: (ctx, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator(color: Color(0xFF137FEC)));
+                  }
 
-                    const SizedBox(height: 16),
-
-                    // Filter Chips
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              setState(() => _sortBy = _sortBy == 'A-Z' ? 'Z-A' : 'A-Z');
-                              _filterClubs();
+                          Icon(Icons.error_outline, size: 48, color: Colors.red),
+                          SizedBox(height: 16),
+                          Text(
+                            'Error loading clubs',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _clubsFuture = _fetchClubs();
+                              });
                             },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: const Color(0xFF137FEC).withOpacity(0.1),
-                              ),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    'Sort: $_sortBy',
-                                    style: TextStyle(
-                                      color: const Color(0xFF137FEC),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    Icons.arrow_drop_down,
-                                    color: const Color(0xFF137FEC),
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF137FEC),
                             ),
+                            child: Text('Retry', style: TextStyle(color: Colors.white)),
                           ),
                         ],
                       ),
-                    ),
+                    );
+                  }
 
-                    const SizedBox(height: 16),
+                  final clubs = snapshot.data ?? [];
+                  final filtered = _filteredClubs.isEmpty && _allClubs.isNotEmpty
+                      ? _allClubs
+                      : _filteredClubs;
 
-                    // Clubs List
-                    _filteredClubs.isEmpty
-                        ? Center(child: Text('No clubs found', style: TextStyle(color: Colors.grey[500])))
-                        : Column(
-                            children: List.generate(
-                              _filteredClubs.length,
-                              (index) => Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: _buildClubCard(_filteredClubs[index]),
+                  return Column(
+                    children: [
+                      // Search and Filter Bar
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Color(0xFF192734),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[800]!),
+                              ),
+                              child: TextField(
+                                controller: _searchController,
+                                style: TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  hintText: 'Search clubs...',
+                                  hintStyle: TextStyle(color: Colors.grey[500]),
+                                  prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
                               ),
                             ),
-                          ),
-
-                    const SizedBox(height: 16),
-                  ],
-                ),
+                            SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildFilterButton('A-Z', _sortBy == 'A-Z'),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: _buildFilterButton('Z-A', _sortBy == 'Z-A'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(32),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.group_off, size: 64, color: Colors.grey[600]),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'No clubs found',
+                                        style: TextStyle(
+                                          color: Colors.grey[400],
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                itemCount: filtered.length,
+                                itemBuilder: (ctx, idx) {
+                                  final club = filtered[idx];
+                                  return _buildClubCard(club);
+                                },
+                              ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String label, String currentValue, Function(String) onChanged) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[800]!),
-        color: const Color(0xFF192734),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
             ),
-          ),
-          const SizedBox(width: 4),
-          Icon(
-            Icons.arrow_drop_down,
-            color: Colors.grey[600],
-            size: 18,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildClubCard(Club club) {
-    return InkWell(
+  Widget _buildFilterButton(String label, bool isSelected) {
+    return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ClubDetailsScreen(club: club, token: widget.token),
-          ),
-        );
+        setState(() {
+          _sortBy = label;
+          _filterClubs();
+        });
       },
       child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
+          color: isSelected ? Color(0xFF137FEC) : Color(0xFF192734),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[800]!),
-          color: const Color(0xFF192734),
+          border: Border.all(
+            color: isSelected ? Color(0xFF137FEC) : Colors.grey[800]!,
+          ),
         ),
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.grey[600],
-              ),
-              child: Icon(club.icon, color: Colors.white, size: 28),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.grey[400],
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    club.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    club.category,
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClubCard(Club club) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ClubDetailsScreen(club: club, token: widget.token),
             ),
-          ],
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[800]!),
+            color: Color(0xFF192734),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey[800],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(club.icon, color: Colors.white70, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      club.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF137FEC).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Color(0xFF137FEC).withOpacity(0.3)),
+                      ),
+                      child: Text(
+                        club.category,
+                        style: TextStyle(
+                          color: Color(0xFF137FEC),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: Colors.grey[600]),
+            ],
+          ),
         ),
       ),
     );

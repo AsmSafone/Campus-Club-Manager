@@ -137,47 +137,230 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     final event = widget.event;
     final title = (event['title'] ?? event['name'] ?? 'Event').toString();
     final host = (event['club_name'] ?? event['club'] ?? '').toString();
-    final dateRaw = event['date'] ?? event['datetime'] ?? event['date_time'] ?? '';
+    
+    // Handle date and time separately - combine if time exists
+    String dateRaw = event['date'] ?? event['datetime'] ?? event['date_time'] ?? '';
+    final eventTime = event['time'];
+    if (dateRaw.isNotEmpty && eventTime != null && eventTime.toString().isNotEmpty) {
+      // Combine date and time
+      dateRaw = '$dateRaw ${eventTime.toString().trim()}';
+    }
     final date = _formatDateRaw(dateRaw);
+    
     final venue = (event['venue'] ?? '').toString();
     final price = (event['price'] ?? event['fee'] ?? '').toString();
     final description = (event['description'] ?? '').toString();
+    final status = (event['status'] ?? 'Pending').toString();
+    final capacity = event['capacity'];
+
+    // Event image
+    final imageUrl = event['image'] ?? event['image_url'];
+    
+    // Status color
+    final statusUpper = status.toUpperCase();
+    Color statusColor;
+    switch (statusUpper) {
+      case 'CONFIRMED':
+      case 'COMPLETED':
+        statusColor = Colors.green;
+        break;
+      case 'CANCELLED':
+        statusColor = Colors.red;
+        break;
+      case 'PENDING':
+      default:
+        statusColor = Colors.orange;
+        break;
+    }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Event Details')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          if (host.isNotEmpty) Text('Hosted by $host'),
-          const SizedBox(height: 16),
-          Row(children: [const Icon(Icons.calendar_month), const SizedBox(width: 8), Expanded(child: Text(date))]),
-          const SizedBox(height: 8),
-          Row(children: [const Icon(Icons.location_on), const SizedBox(width: 8), Expanded(child: Text(venue.isNotEmpty ? venue : 'TBA'))]),
-          const SizedBox(height: 8),
-          Row(children: [const Icon(Icons.sell), const SizedBox(width: 8), Text(price.isNotEmpty ? price : 'Free')]),
-          const SizedBox(height: 16),
-          const Text('About this event', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text(description.isNotEmpty ? description : 'No description provided.'),
-          const SizedBox(height: 16),
-          Text('$_attendees Attendees', style: const TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: (_registering || _registered) ? null : _register,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _registered ? Colors.grey : null,
+      backgroundColor: Color(0xFF101922),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF101922),
+        elevation: 0,
+        toolbarHeight: 0,
+      ),
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
               ),
-              child: _registering
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text(_registered ? 'Registered' : 'Register'),
+            ),
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                    onPressed: () => Navigator.pop(context),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Event Details',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ]),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Event image if available
+                  if (imageUrl != null && imageUrl.toString().isNotEmpty)
+                    Container(
+                      height: 200,
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(
+                          image: NetworkImage(imageUrl.toString()),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  // Status badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: statusColor),
+                    ),
+                    child: Text(
+                      statusUpper,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (host.isNotEmpty)
+                    Text(
+                      'Hosted by $host',
+                      style: TextStyle(color: Colors.grey[300]),
+                    ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_month, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(date, style: TextStyle(color: Colors.white))),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          venue.isNotEmpty ? venue : 'TBA',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.sell, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        price.isNotEmpty ? price : 'Free',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  if (capacity != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.event_seat, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Capacity: $capacity ${capacity > 1 ? 'attendees' : 'attendee'}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  const Text(
+                    'About this event',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    description.isNotEmpty ? description : 'No description provided.',
+                    style: TextStyle(color: Colors.grey[300]),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '$_attendees${capacity != null ? ' / $capacity' : ''} Attendees',
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (_registering || _registered) ? null : _register,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _registered ? Colors.grey : Color(0xFF137FEC),
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _registering
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Text(
+                              _registered ? 'Registered' : 'Register',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

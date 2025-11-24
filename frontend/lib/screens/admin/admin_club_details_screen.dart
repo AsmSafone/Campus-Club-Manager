@@ -434,57 +434,79 @@ class _AdminClubDetailsScreenState extends State<AdminClubDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF101922),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(64),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey[800]!)),
-            color: const Color(0xFF192734),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF101922),
+        elevation: 0,
+        toolbarHeight: 0,
+      ),
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
                     onPressed: () {
-                      // Return true to the previous route so it can reload dashboard data
                       Navigator.pop(context, true);
                     },
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
                   ),
-
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       _clubDetails != null
                           ? 'Manage ${_clubDetails!['name'] ?? 'Club'}'
                           : 'Manage Club',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: TextStyle(
                         color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.person_add),
-                    color: Colors.white,
+                    icon: const Icon(Icons.person_add, color: Colors.white70),
                     onPressed: _showAddMemberDialog,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
                   ),
+                  SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    color: Colors.redAccent,
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                     tooltip: 'Delete club',
                     onPressed: _confirmDeleteClub,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-      body: _isLoading
+          Expanded(
+            child: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF137FEC)),
             )
@@ -530,10 +552,10 @@ class _AdminClubDetailsScreenState extends State<AdminClubDetailsScreen> {
                               color: Colors.grey[700],
                               image:
                                   _clubDetails != null &&
-                                      _clubDetails!['logo_url'] != null
+                                      (_clubDetails!['logo_url'] ?? _clubDetails!['logo']) != null
                                   ? DecorationImage(
                                       image: NetworkImage(
-                                        _clubDetails!['logo_url'],
+                                        (_clubDetails!['logo_url'] ?? _clubDetails!['logo']).toString(),
                                       ),
                                       fit: BoxFit.cover,
                                     )
@@ -541,7 +563,7 @@ class _AdminClubDetailsScreenState extends State<AdminClubDetailsScreen> {
                             ),
                             child:
                                 _clubDetails != null &&
-                                    _clubDetails!['logo_url'] == null
+                                    (_clubDetails!['logo_url'] ?? _clubDetails!['logo']) == null
                                 ? const Icon(
                                     Icons.groups,
                                     color: Colors.white,
@@ -638,6 +660,9 @@ class _AdminClubDetailsScreenState extends State<AdminClubDetailsScreen> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
     );
   }
 

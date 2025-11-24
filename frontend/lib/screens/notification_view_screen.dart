@@ -172,104 +172,146 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF101922),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101922),
+        backgroundColor: Color(0xFF101922),
         elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back, color: Color(0xFF999999)),
-        ),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Color(0xFF137FEC)),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => NotificationSettingsScreen(token: widget.token),
-                ),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Center(
-              child: GestureDetector(
-                onTap: _markAllAsRead,
-                child: const Text(
-                  'Mark All',
-                  style: TextStyle(
-                    color: Color(0xFF137FEC),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+        toolbarHeight: 0,
+      ),
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                        onPressed: () => Navigator.pop(context),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.1),
+                          padding: EdgeInsets.all(8),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Notifications',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.settings, color: Colors.white70, size: 22),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => NotificationSettingsScreen(token: widget.token),
+                            ),
+                          );
+                        },
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.1),
+                          padding: EdgeInsets.all(8),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      TextButton(
+                        onPressed: _markAllAsRead,
+                        child: Text(
+                          'Mark All',
+                          style: TextStyle(
+                            color: Color(0xFF137FEC),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              color: const Color(0xFF137FEC),
+              onRefresh: _refreshNotifications,
+              child: FutureBuilder<List<Notification>>(
+                future: _notificationsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: Color(0xFF137FEC)),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Error loading notifications',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _refreshNotifications,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  _notifications = snapshot.data ?? [];
+
+                  if (_notifications.isEmpty) {
+                    return _buildEmptyState();
+                  }
+
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _buildSectionTitle('TODAY'),
+                      const SizedBox(height: 12),
+                      ..._notifications.map((notif) => GestureDetector(
+                        onTap: () => _markAsRead(notif.id),
+                        child: _buildNotificationItem(notif),
+                      )),
+                      const SizedBox(height: 24),
+                    ],
+                  );
+                },
               ),
             ),
           ),
         ],
-      ),
-      body: RefreshIndicator(
-        color: const Color(0xFF137FEC),
-        onRefresh: _refreshNotifications,
-        child: FutureBuilder<List<Notification>>(
-          future: _notificationsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF137FEC)),
-              );
-            }
-
-            if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Error loading notifications',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _refreshNotifications,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            _notifications = snapshot.data ?? [];
-
-            if (_notifications.isEmpty) {
-              return _buildEmptyState();
-            }
-
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildSectionTitle('TODAY'),
-                const SizedBox(height: 12),
-                ..._notifications.map((notif) => GestureDetector(
-                  onTap: () => _markAsRead(notif.id),
-                  child: _buildNotificationItem(notif),
-                )),
-                const SizedBox(height: 24),
-              ],
-            );
-          },
-        ),
       ),
     );
   }
@@ -307,8 +349,16 @@ class _NotificationViewScreenState extends State<NotificationViewScreen> {
       margin: EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isRead ? Color(0xFF1C2936).withOpacity(0.5) : Color(0xFF1C2936),
+        color: isRead ? Color(0xFF192734).withOpacity(0.6) : Color(0xFF192734),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

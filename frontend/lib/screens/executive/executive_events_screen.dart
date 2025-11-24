@@ -56,214 +56,262 @@ class _ExecutiveEventsScreenState extends State<ExecutiveEventsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: const Color(0xFF101922),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text('All Events'),
+        backgroundColor: Color(0xFF101922),
         elevation: 0,
+        toolbarHeight: 0,
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _eventsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF137FEC)),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
                 children: [
-                  Text(
-                    'Error: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _eventsFuture = _fetchAllEvents();
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF137FEC),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                    onPressed: () => Navigator.pop(context),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
                     ),
-                    child: const Text('Retry'),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'All Events',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            );
-          }
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _eventsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF137FEC)),
+                  );
+                }
 
-          final events = snapshot.data ?? [];
-
-          if (events.isEmpty) {
-            return const Center(
-              child: Text(
-                'No events scheduled',
-                style: TextStyle(color: Colors.grey),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              DateTime eventDate = DateTime.parse(event['date']);
-              String month = [
-                'JAN',
-                'FEB',
-                'MAR',
-                'APR',
-                'MAY',
-                'JUN',
-                'JUL',
-                'AUG',
-                'SEP',
-                'OCT',
-                'NOV',
-                'DEC'
-              ][eventDate.month - 1];
-              String day = eventDate.day.toString().padLeft(2, '0');
-
-                return Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[800]!),
-                    ),
-                    child: Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => 
-                            EventDetailsScreen(event: event, token: widget.token, clubId: widget.clubId,),
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Error: ${snapshot.error}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _eventsFuture = _fetchAllEvents();
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF137FEC),
                           ),
-                          ).then((_) => _refreshEvents());
-                        },
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(6),
-                                color: const Color(0xFF137FEC).withOpacity(0.2),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if ((event['isRegistered'] ?? event['registered'] ?? event['attending'] ?? event['is_registered']) == true) ...[
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      margin: const EdgeInsets.only(bottom: 6),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF137FEC),
-                                        borderRadius: BorderRadius.circular(10),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final events = snapshot.data ?? [];
+
+                if (events.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No events scheduled',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: events.length,
+                  itemBuilder: (context, index) {
+                    final event = events[index];
+                    DateTime eventDate = DateTime.parse(event['date']);
+                    String month = [
+                      'JAN',
+                      'FEB',
+                      'MAR',
+                      'APR',
+                      'MAY',
+                      'JUN',
+                      'JUL',
+                      'AUG',
+                      'SEP',
+                      'OCT',
+                      'NOV',
+                      'DEC'
+                    ][eventDate.month - 1];
+                    String day = eventDate.day.toString().padLeft(2, '0');
+
+                    return Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[800]!),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => 
+                                        EventDetailsScreen(event: event, token: widget.token, clubId: widget.clubId,),
                                       ),
-                                      child: const Text(
-                                        'REGISTERED',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
+                                    ).then((_) => _refreshEvents());
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(6),
+                                          color: const Color(0xFF137FEC).withOpacity(0.2),
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            if ((event['isRegistered'] ?? event['registered'] ?? event['attending'] ?? event['is_registered']) == true) ...[
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                margin: const EdgeInsets.only(bottom: 6),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFF137FEC),
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                                child: const Text(
+                                                  'REGISTERED',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 9,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ] else const SizedBox(height: 6),
+                                            Text(
+                                              month,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF137FEC),
+                                              ),
+                                            ),
+                                            Text(
+                                              day,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w900,
+                                                color: Color(0xFF137FEC),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
-                                  ] else const SizedBox(height: 6),
-                                  Text(
-                                    month,
-                                    style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF137FEC),
-                                    ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              event['title'] ?? 'Untitled Event',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                                fontSize: 15,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              event['venue'] ?? 'No venue',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[400],
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            if (event['description'] != null && event['description'].toString().isNotEmpty) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                event['description'] ?? '',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey[500],
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        '${event['attendees'] ?? 0} attendees',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey[500],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    day,
-                                    style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFF137FEC),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    event['title'] ?? 'Untitled Event',
-                                    style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    event['venue'] ?? 'No venue',
-                                    style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[400],
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (event['description'] != null && event['description'].toString().isNotEmpty) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                    event['description'] ?? '',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey[500],
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ],
+                              IconButton(
+                                icon: const Icon(Icons.more_vert, color: Colors.grey),
+                                onPressed: () => _showEventOptions(context, event),
                               ),
-                            ),
-                            Text(
-                              '${event['attendees'] ?? 0} attendees',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.more_vert, color: Colors.grey),
-                        onPressed: () => _showEventOptions(context, event),
-                      ),
-                    ],
-                    ),
-                  ),
-                  if (index < events.length - 1) const SizedBox(height: 12),
-                ],
+                        if (index < events.length - 1) const SizedBox(height: 12),
+                      ],
+                    );
+                  },
                 );
-            },
-          );
-        },
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

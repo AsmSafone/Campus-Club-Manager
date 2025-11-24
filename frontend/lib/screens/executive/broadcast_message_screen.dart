@@ -85,18 +85,60 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF101922),
       appBar: AppBar(
-        title: const Text('Compose Announcement'),
+        backgroundColor: Color(0xFF101922),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        toolbarHeight: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                    onPressed: () => Navigator.pop(context),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Compose Announcement',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,9 +218,10 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
               ],
             ),
           ),
-        ),
-      ),
-      bottomNavigationBar: Container(
+            ),
+          ),
+          // Bottom Button
+          Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           border: Border(
@@ -204,6 +247,8 @@ class _BroadcastMessageScreenState extends State<BroadcastMessageScreen> {
             const SizedBox.shrink(),
           ],
         ),
+      ),
+        ],
       ),
     );
   }

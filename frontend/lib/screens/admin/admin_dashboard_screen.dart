@@ -443,24 +443,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userName = widget.user?['name']?.toString() ?? 'Admin';
+    
     return Scaffold(
+      backgroundColor: Color(0xFF101922),
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        backgroundColor: Color(0xFF101922),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadDashboardData,
-            tooltip: 'Refresh',
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await signOutAndNavigate(context);
-            },
-            tooltip: 'Logout',
-          ),
-        ],
+        toolbarHeight: 0,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -478,21 +468,131 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ],
               ),
             )
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Stats Section
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
+          : Container(
+              color: Color(0xFF101922),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  // Enhanced Header Section with Gradient (matching member panel)
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF137FEC).withOpacity(0.2),
+                          Color(0xFF1E3A8A).withOpacity(0.15),
+                          Color(0xFF101922),
+                        ],
+                      ),
+                    ),
+                    padding: EdgeInsets.fromLTRB(16, 20, 16, 24),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Welcome back,',
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    userName,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: _loadDashboardData,
+                                  icon: const Icon(
+                                    Icons.refresh,
+                                    color: Colors.white70,
+                                    size: 22,
+                                  ),
+                                  tooltip: 'Refresh',
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.white.withOpacity(0.1),
+                                    padding: EdgeInsets.all(8),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.logout,
+                                    color: Colors.white70,
+                                    size: 22,
+                                  ),
+                                  onPressed: () async {
+                                    await signOutAndNavigate(context);
+                                  },
+                                  tooltip: 'Logout',
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.white.withOpacity(0.1),
+                                    padding: EdgeInsets.all(8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Enhanced Stats Section with Gradients
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF137FEC).withOpacity(0.1),
+                          Color(0xFF192734).withOpacity(0.3),
+                          Color(0xFF101922),
+                        ],
+                      ),
+                    ),
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Overview',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 16),
                         Row(
                           children: [
                             Expanded(
                               child: _StatCard(
                                 title: 'Total Clubs',
                                 value: (_stats?['totalClubs'] ?? 0).toString(),
+                                icon: Icons.group,
+                                color: Color(0xFF137FEC),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -500,6 +600,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               child: _StatCard(
                                 title: 'Active Users',
                                 value: (_stats?['activeUsers'] ?? 0).toString(),
+                                icon: Icons.people,
+                                color: Colors.green,
                               ),
                             ),
                           ],
@@ -512,6 +614,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 title: 'Pending Approvals',
                                 value: (_stats?['pendingApprovals'] ?? 0)
                                     .toString(),
+                                icon: Icons.pending_actions,
+                                color: Colors.orange,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -520,6 +624,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 title: 'Event Sign-ups',
                                 value: (_stats?['eventSignups'] ?? 0)
                                     .toString(),
+                                icon: Icons.event_note,
+                                color: Colors.purple,
                               ),
                             ),
                           ],
@@ -528,24 +634,44 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ),
 
-                  // Search Bar
+                  // Enhanced Search Bar
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search clubs or users...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Color(0xFF192734),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[800]!),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Search clubs or users...',
+                          hintStyle: TextStyle(color: Colors.grey[500]),
+                          prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 16,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   // View Toggle
                   Padding(
@@ -572,6 +698,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 _filterData();
                               });
                             },
+                            style: SegmentedButton.styleFrom(
+                              backgroundColor: Color(0xFF137FEC).withOpacity(0.2),
+                              selectedBackgroundColor: Color(0xFF137FEC),
+                              selectedForegroundColor: Colors.white,
+                              foregroundColor: Colors.white,
+                              side: BorderSide(color: Colors.grey[700]!),
+                            ),
                           ),
                         ),
                       ],
@@ -584,14 +717,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: _selectedView == 'Clubs'
                         ? _filteredClubs.isEmpty
-                              ? const Center(child: Text('No clubs found'))
+                              ? Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(32),
+                                    child: Text(
+                                      'No clubs found',
+                                      style: TextStyle(color: Colors.grey[400]),
+                                    ),
+                                  ),
+                                )
                               : Column(
                                   children: _filteredClubs.map((club) {
                                     return _buildClubCard(club);
                                   }).toList(),
                                 )
                         : _filteredUsers.isEmpty
-                        ? const Center(child: Text('No users found'))
+                        ? Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32),
+                              child: Text(
+                                'No users found',
+                                style: TextStyle(color: Colors.grey[400]),
+                              ),
+                            ),
+                          )
                         : Column(
                             children: _filteredUsers.map((user) {
                               return _buildUserCard(user);
@@ -599,68 +748,125 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           ),
                   ),
                   const SizedBox(height: 20),
-                ],
+                  ],
+                ),
               ),
             ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddClubModal,
-        child: const Icon(Icons.add),
+        backgroundColor: Color(0xFF137FEC),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'New Club',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        elevation: 4,
       ),
     );
   }
 
   Widget _buildClubCard(Map<String, dynamic> club) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
+      decoration: BoxDecoration(
+        color: Color(0xFF192734),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminClubDetailsScreen(
+                  clubId: club['club_id'],
+                  token: widget.token!,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               children: [
-                CircleAvatar(radius: 24, child: Text(club['name'][0])),
-                const SizedBox(width: 12),
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF137FEC).withOpacity(0.8),
+                        Color(0xFF1E3A8A),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFF137FEC).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      club['name'][0].toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         club['name'],
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        '${club['members']} Members',
                         style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          letterSpacing: -0.3,
+                          color: Colors.white,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.people, size: 14, color: Colors.grey[400]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${club['members']} Members',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
+                Icon(Icons.chevron_right, color: Colors.grey[600]),
               ],
             ),
-            ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AdminClubDetailsScreen(
-                          clubId: club['club_id'],
-                          token: widget.token!, // ensure non-nullable
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text('View'),
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -680,40 +886,102 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildUserCard(Map<String, dynamic> user) {
-    return Card(
+    final statusColor = _getStatusColor(user['status']);
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Color(0xFF192734),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            CircleAvatar(radius: 24, child: Text(user['name'][0])),
-            const SizedBox(width: 12),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.grey[700]!,
+                    Colors.grey[900]!,
+                  ],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  user['name'][0].toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     user['name'],
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      letterSpacing: -0.3,
+                      color: Colors.white,
+                    ),
                   ),
-                  Text(
-                    user['role'] ?? 'No Role',
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.badge, size: 13, color: Colors.grey[400]),
+                      const SizedBox(width: 4),
+                      Text(
+                        user['role'] ?? 'No Role',
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: _getStatusColor(user['status']).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
+                color: statusColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: statusColor.withOpacity(0.5),
+                  width: 1,
+                ),
               ),
               child: Text(
                 user['status'],
                 style: TextStyle(
-                  color: _getStatusColor(user['status']),
+                  color: statusColor,
                   fontSize: 11,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -727,28 +995,70 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
+  final IconData? icon;
+  final Color? color;
 
-  const _StatCard({required this.title, required this.value});
+  const _StatCard({
+    required this.title,
+    required this.value,
+    this.icon,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+    final cardColor = color ?? Color(0xFF137FEC);
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Color(0xFF192734),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null) ...[
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: cardColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: cardColor,
+                size: 20,
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
+            SizedBox(height: 12),
           ],
-        ),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[400],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ],
       ),
     );
   }

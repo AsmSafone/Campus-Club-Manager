@@ -240,44 +240,59 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF101922),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey[800]!)),
-            color: const Color(0xFF192734),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF101922),
+        elevation: 0,
+        toolbarHeight: 0,
+      ),
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
                     onPressed: () => Navigator.pop(context),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
                   ),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Financial Reports',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: TextStyle(
                         color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48),
                 ],
               ),
             ),
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Configure Report Card
@@ -665,7 +680,9 @@ class _FinancialReportGenerationScreenState extends State<FinancialReportGenerat
               const SizedBox(height: 16),
             ],
           ),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

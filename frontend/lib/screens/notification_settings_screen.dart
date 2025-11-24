@@ -117,34 +117,62 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     return Scaffold(
       backgroundColor: Color(0xFF101922),
       appBar: AppBar(
-        backgroundColor: Color(0xFF192734),
+        backgroundColor: Color(0xFF101922),
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        toolbarHeight: 0,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Title
-            Padding(
-              padding: const EdgeInsets.only(top: 24.0, bottom: 32.0),
-              child: Text(
-                'Notification Preferences',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+      body: Column(
+        children: [
+          // Gradient Header
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF137FEC).withOpacity(0.2),
+                  Color(0xFF1E3A8A).withOpacity(0.15),
+                  Color(0xFF101922),
+                ],
               ),
             ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            padding: EdgeInsets.fromLTRB(16, 20, 16, 16),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
                 children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                    onPressed: () => Navigator.pop(context),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      padding: EdgeInsets.all(8),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Notification Preferences',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 8),
                   // General Notifications Section
                   Text(
                     'General Notifications',
@@ -240,62 +268,68 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                     ),
                   ],
 
-                  SizedBox(height: 40),
-                ],
+                    SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        color: Color(0xFF192734),
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _saveSettings,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF4A90E2),
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+          ),
+          // Bottom Save Button
+          Container(
+            decoration: BoxDecoration(
+              color: Color(0xFF192734),
+              border: Border(top: BorderSide(color: Colors.grey[800]!)),
+            ),
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _saveSettings,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF137FEC),
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: Text(
+                      'Save Changes',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
                   ),
                 ),
-                child: Text(
-                  'Save Changes',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _pushNotifications = true;
+                      _emailNotifications = false;
+                      _clubAnnouncements = true;
+                      _newEventAnnouncements = true;
+                      _rsvpEventReminders = true;
+                      _reminderTime = '2 hours before';
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Reset to defaults')),
+                    );
+                  },
+                  child: Text(
+                    'Reset to Default',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 12,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-            SizedBox(height: 12),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _pushNotifications = true;
-                  _emailNotifications = false;
-                  _clubAnnouncements = true;
-                  _newEventAnnouncements = true;
-                  _rsvpEventReminders = true;
-                  _reminderTime = '2 hours before';
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Reset to defaults')),
-                );
-              },
-              child: Text(
-                'Reset to Default',
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 12,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -306,22 +340,44 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     required bool value,
     required Function(bool) onChanged,
   }) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.grey[500], size: 24),
-        SizedBox(width: 16),
-        Expanded(
-          child: Text(
-            title,
-            style: TextStyle(color: Colors.white, fontSize: 14),
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF192734),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[800]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
-        ),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeColor: Color(0xFF4A90E2),
-        ),
-      ],
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Color(0xFF137FEC).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: Color(0xFF137FEC), size: 20),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: Color(0xFF137FEC),
+          ),
+        ],
+      ),
     );
   }
 
@@ -333,10 +389,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? Color(0xFF4A90E2) : Colors.grey[700]!,
+            color: isSelected ? Color(0xFF137FEC) : Colors.grey[700]!,
           ),
           borderRadius: BorderRadius.circular(6),
-          color: isSelected ? Color(0xFF4A90E2).withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? Color(0xFF137FEC).withOpacity(0.1) : Colors.transparent,
         ),
         child: Row(
           children: [
@@ -346,7 +402,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? Color(0xFF4A90E2) : Colors.grey[600]!,
+                  color: isSelected ? Color(0xFF137FEC) : Colors.grey[600]!,
                   width: 2,
                 ),
               ),
@@ -357,7 +413,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         height: 8,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFF4A90E2),
+                          color: Color(0xFF137FEC),
                         ),
                       ),
                     )

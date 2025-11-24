@@ -148,6 +148,7 @@ class _ClubExecutiveDashboardScreenState
         'member_count': data['member_count'] ?? 0,
         'upcoming_events': data['upcoming_events'] ?? 0,
         'balance': data['balance']?.toString() ?? '0.00',
+        'logo_url': data['logo_url'] ?? data['logo'] ?? null,
       };
     } else {
       throw Exception('Failed to load club details: ${response.statusCode}');
@@ -221,113 +222,195 @@ class _ClubExecutiveDashboardScreenState
     final memberCount = (_clubDetails?['member_count'] ?? 0).toString();
     final upcomingEvents = (_clubDetails?['upcoming_events'] ?? 0).toString();
     final balance = _clubDetails?['balance'] ?? '0.00';
+    final userName = widget.user?['name']?.toString() ?? 'Executive';
 
     return Scaffold(
+      backgroundColor: Color(0xFF101922),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF101922),
+        elevation: 0,
+        toolbarHeight: 0,
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header with club info and notifications
+            // Enhanced Header Section with Gradient (matching member/admin panels)
             Container(
-              color: const Color(0xFF1E1E1E),
-              padding: const EdgeInsets.all(16.0),
-              child: SafeArea(
-                bottom: false,
-                child: Row(
-                  children: [
-                    // Club logo
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey[400],
-                      ),
-                      child: const Icon(Icons.computer, color: Colors.white),
-                    ),
-                    const SizedBox(width: 12),
-                    // Club name
-                    Expanded(
-                      child: Text(
-                        clubName,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    // Notification icon with badge
-                    Stack(
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.notifications,
-                            color: Colors.white,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    NotificationViewScreen(token: widget.token),
-                              ),
-                            );
-                          },
-                        ),
-                        // Positioned(
-                        //   top: 8,
-                        //   right: 8,
-                        //   child: Container(
-                        //     padding: const EdgeInsets.all(4),
-                        //     decoration: BoxDecoration(
-                        //       color: Colors.red,
-                        //       shape: BoxShape.circle,
-                        //     ),
-                        //     child: const Text(
-                        //       '0',
-                        //       style: TextStyle(
-                        //         color: Colors.white,
-                        //         fontSize: 10,
-                        //         fontWeight: FontWeight.bold,
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
-                      ],
-                    ),
-                    // Logout button
-                    IconButton(
-                      icon: const Icon(Icons.logout, color: Colors.white),
-                      onPressed: () async {
-                        await signOutAndNavigate(context);
-                      },
-                      tooltip: 'Logout',
-                    ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF137FEC).withOpacity(0.2),
+                    Color(0xFF1E3A8A).withOpacity(0.15),
+                    Color(0xFF101922),
                   ],
                 ),
+              ),
+              padding: EdgeInsets.fromLTRB(16, 20, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome back,',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              userName,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.grey[800],
+                                    image: (_clubDetails?['logo_url'] ?? _clubDetails?['logo']) != null
+                                        ? DecorationImage(
+                                            image: NetworkImage(
+                                              (_clubDetails!['logo_url'] ?? _clubDetails!['logo']).toString(),
+                                            ),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
+                                  ),
+                                  child: (_clubDetails?['logo_url'] ?? _clubDetails?['logo']) == null
+                                      ? Icon(Icons.group, color: Colors.white70, size: 18)
+                                      : null,
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    clubName,
+                                    style: TextStyle(
+                                      color: Colors.grey[300],
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: _loadDashboardData,
+                            icon: const Icon(
+                              Icons.refresh,
+                              color: Colors.white70,
+                              size: 22,
+                            ),
+                            tooltip: 'Refresh',
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.white.withOpacity(0.1),
+                              padding: EdgeInsets.all(8),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Stack(
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.notifications,
+                                  color: Colors.white70,
+                                  size: 22,
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          NotificationViewScreen(token: widget.token),
+                                    ),
+                                  );
+                                },
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(0.1),
+                                  padding: EdgeInsets.all(8),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.logout,
+                              color: Colors.white70,
+                              size: 22,
+                            ),
+                            onPressed: () async {
+                              await signOutAndNavigate(context);
+                            },
+                            tooltip: 'Logout',
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.white.withOpacity(0.1),
+                              padding: EdgeInsets.all(8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             // Stats cards
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
                   Expanded(
                     child: _buildStatCard(
                       'Total Members',
                       memberCount.toString(),
+                      icon: Icons.people,
+                      color: Color(0xFF137FEC),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
                       'Upcoming Events',
                       upcomingEvents.toString(),
+                      icon: Icons.event,
+                      color: Colors.purple,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: _buildStatCard('Current Balance', '\$$balance'),
+                    child: _buildStatCard(
+                      'Balance',
+                      '\$$balance',
+                      icon: Icons.account_balance_wallet,
+                      color: Colors.green,
+                    ),
                   ),
                 ],
               ),
@@ -349,7 +432,11 @@ class _ClubExecutiveDashboardScreenState
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF137FEC),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
                       ),
                     ),
                   ),
@@ -362,7 +449,10 @@ class _ClubExecutiveDashboardScreenState
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: BorderSide(color: Colors.grey[700]!),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -396,7 +486,15 @@ class _ClubExecutiveDashboardScreenState
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: const Color(0xFF1E1E1E),
+                color: Color(0xFF192734),
+                border: Border.all(color: Colors.grey[800]!),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1158,30 +1256,56 @@ class _ClubExecutiveDashboardScreenState
     }
   }
 
-  Widget _buildStatCard(String title, String value) {
+  Widget _buildStatCard(String title, String value, {IconData? icon, Color? color}) {
+    final cardColor = color ?? Color(0xFF137FEC);
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[800]!),
-        color: const Color(0xFF1E1E1E),
+        color: Color(0xFF192734),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (icon != null) ...[
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: cardColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: cardColor,
+                size: 20,
+              ),
+            ),
+            SizedBox(height: 12),
+          ],
           Text(
             title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[500],
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            style: TextStyle(
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white,
+              letterSpacing: -0.5,
             ),
           ),
         ],
@@ -1291,7 +1415,15 @@ class _ClubExecutiveDashboardScreenState
       margin: const EdgeInsets.symmetric(horizontal: 16.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: const Color(0xFF1E1E1E),
+        color: Color(0xFF192734),
+        border: Border.all(color: Colors.grey[800]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1311,9 +1443,10 @@ class _ClubExecutiveDashboardScreenState
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),

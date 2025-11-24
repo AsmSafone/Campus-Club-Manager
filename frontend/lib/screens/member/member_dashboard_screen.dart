@@ -223,63 +223,132 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Enhanced Header Section with Gradient
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF137FEC).withOpacity(0.2),
+                        Color(0xFF1E3A8A).withOpacity(0.15),
+                        Color(0xFF101922),
+                      ],
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(16, 20, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Hi, $_userName',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // notifications with badge
-                          IconButton(
-                              onPressed: _loadDashboard,
-                              icon: const Icon(
-                                Icons.refresh,
-                                color: Colors.white,
-                              ),
-                              tooltip: 'Refresh',
-                            ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.notifications,
-                                  color: Colors.white,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Welcome back,',
+                                  style: TextStyle(
+                                    color: Colors.grey[400],
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => NotificationViewScreen(
-                                        token: widget.token,
+                                SizedBox(height: 4),
+                                Text(
+                                  _userName,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: _loadDashboard,
+                                icon: const Icon(
+                                  Icons.refresh,
+                                  color: Colors.white70,
+                                  size: 22,
+                                ),
+                                tooltip: 'Refresh',
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(0.1),
+                                  padding: EdgeInsets.all(8),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Stack(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.notifications,
+                                      color: Colors.white70,
+                                      size: 22,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => NotificationViewScreen(
+                                            token: widget.token,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.white.withOpacity(0.1),
+                                      padding: EdgeInsets.all(8),
+                                    ),
+                                  ),
+                                  if (_unreadNotifications > 0)
+                                    Positioned(
+                                      right: 8,
+                                      top: 8,
+                                      child: Container(
+                                        padding: EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        constraints: BoxConstraints(
+                                          minWidth: 16,
+                                          minHeight: 16,
+                                        ),
+                                        child: Text(
+                                          '${_unreadNotifications > 9 ? '9+' : _unreadNotifications}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
                                     ),
-                                  );
-                                },
+                                ],
                               ),
-                          IconButton(
-                            icon: const Icon(Icons.logout, color: Colors.white),
-                              onPressed: () async {
-                                await signOutAndNavigate(context);
-                              },
-                            tooltip: 'Logout',
+                            ],
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
+                // Announcement Section - Before Stats
                 Builder(
                   builder: (context) {
                     if (_latestAnnouncement == null || _latestAnnouncement!.isEmpty) {
                       return SizedBox.shrink();
                     }
                     
+                    // Filter non-dismissed announcements
                     final nonDismissed = _latestAnnouncement!.where((ann) {
                       final annMap = Map<String, dynamic>.from(ann as Map);
                       final annId = annMap['id'] ?? annMap['notification_id'];
@@ -293,47 +362,180 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                       return SizedBox.shrink();
                     }
                     
-                    final firstAnn = nonDismissed.first;
-                    final announcement = Announcement.fromMap(Map<String, dynamic>.from(firstAnn as Map));
+                    // Sort by timestamp/date (most recent first)
+                    nonDismissed.sort((a, b) {
+                      final aMap = Map<String, dynamic>.from(a as Map);
+                      final bMap = Map<String, dynamic>.from(b as Map);
+                      
+                      // Try to get timestamp or date
+                      final aTime = aMap['timestamp'] ?? aMap['created_at'] ?? aMap['date'] ?? '';
+                      final bTime = bMap['timestamp'] ?? bMap['created_at'] ?? bMap['date'] ?? '';
+                      
+                      if (aTime == null || aTime.toString().isEmpty) return 1; // a goes to end
+                      if (bTime == null || bTime.toString().isEmpty) return -1; // b goes to end
+                      
+                      try {
+                        // Try parsing as DateTime
+                        DateTime? aDate;
+                        DateTime? bDate;
+                        
+                        // Handle different formats
+                        if (aTime is num) {
+                          aDate = DateTime.fromMillisecondsSinceEpoch(aTime.toInt() * (aTime.toInt() < 10000000000 ? 1000 : 1));
+                        } else {
+                          final aStr = aTime.toString();
+                          if (aStr.contains('T')) {
+                            aDate = DateTime.parse(aStr);
+                          } else if (aStr.contains(' ')) {
+                            aDate = DateTime.parse(aStr.replaceFirst(' ', 'T'));
+                          } else {
+                            aDate = DateTime.tryParse(aStr);
+                          }
+                        }
+                        
+                        if (bTime is num) {
+                          bDate = DateTime.fromMillisecondsSinceEpoch(bTime.toInt() * (bTime.toInt() < 10000000000 ? 1000 : 1));
+                        } else {
+                          final bStr = bTime.toString();
+                          if (bStr.contains('T')) {
+                            bDate = DateTime.parse(bStr);
+                          } else if (bStr.contains(' ')) {
+                            bDate = DateTime.parse(bStr.replaceFirst(' ', 'T'));
+                          } else {
+                            bDate = DateTime.tryParse(bStr);
+                          }
+                        }
+                        
+                        if (aDate == null) return 1;
+                        if (bDate == null) return -1;
+                        
+                        // Sort descending (most recent first)
+                        return bDate.compareTo(aDate);
+                      } catch (e) {
+                        // If parsing fails, keep original order
+                        return 0;
+                      }
+                    });
+                    
+                    // Get the most recent (first after sorting)
+                    final mostRecent = nonDismissed.first;
+                    final announcement = Announcement.fromMap(Map<String, dynamic>.from(mostRecent as Map));
                     
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16.0,
                         vertical: 8.0,
                       ),
-                      child: _buildAnnouncementCard(announcement, firstAnn),
+                      child: _buildAnnouncementCard(announcement, mostRecent),
                     );
                   },
                 ),
                 SizedBox(height: 16),
+                // Quick Stats Row
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildQuickStatCard(
+                          icon: Icons.event,
+                          value: events.length.toString(),
+                          label: 'Events',
+                          color: Color(0xFF137FEC),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _buildQuickStatCard(
+                          icon: Icons.group,
+                          value: (_myClubs?.length ?? 0).toString(),
+                          label: 'Clubs',
+                          color: Colors.purple,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _buildQuickStatCard(
+                          icon: Icons.campaign,
+                          value: (_latestAnnouncement?.length ?? 0).toString(),
+                          label: 'Updates',
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24),
                 events.isNotEmpty
                     ? Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
                           vertical: 8.0,
                         ),
-                        child: Text(
-                          'Upcoming Events',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                        child: Center(
+                          child: Text(
+                            'Upcoming Events',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
                           ),
                         ),
                       )
                     : SizedBox.shrink(),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      ...events.map((event) {
-                            return _buildEventCard(event);
-                      }).toList(),
-                      SizedBox(width: 8),
-                    ],
-                  ),
-                ),
+                events.isNotEmpty
+                    ? SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          children: [
+                            ...events.map((event) {
+                                  return _buildEventCard(event);
+                            }).toList(),
+                            SizedBox(width: 8),
+                          ],
+                        ),
+                      )
+                    : Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                        child: Container(
+                          padding: EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[900]!.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey[800]!),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.event_busy,
+                                size: 48,
+                                color: Colors.grey[600],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'No Upcoming Events',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Check back later for exciting events!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                 SizedBox(height: 24),
 
                 if(_myClubs != null && _myClubs!.isNotEmpty)
@@ -368,74 +570,142 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                               ),
                             );
                           },
-                            child: Card(
-                              color: Color(0xFF192734),
-                              shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: Colors.grey[800]!),
-                              ),
-                              margin: EdgeInsets.only(bottom: 12),
-                              child: Padding(
-                              padding: EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                // Club logo/avatar if available
-                                if (club['logo'] != null && club['logo'].toString().isNotEmpty)
-                                  CircleAvatar(
-                                  backgroundImage: NetworkImage(club['logo'].toString()),
-                                  radius: 24,
-                                  backgroundColor: Colors.grey[900],
-                                  )
-                                else
-                                  CircleAvatar(
-                                  child: Icon(
-                                    Club.fromMap(Map<String, dynamic>.from(club as Map)).icon,
-                                    color: Colors.white54,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Color(0xFF192734),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[800]!, width: 1),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
                                   ),
-                                  radius: 24,
-                                  backgroundColor: Colors.grey[900],
-                                  ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                    club['name']?.toString() ?? 'Unnamed Club',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    if (club['description'] != null && club['description'].toString().isNotEmpty)
-                                    Text(
-                                      club['description'].toString(),
-                                      style: TextStyle(
-                                      color: Colors.grey[400],
-                                      fontSize: 13,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 4),
-                                    Row(
-                                    children: [
-                                      Icon(Icons.people, size: 14, color: Colors.grey[400]),
-                                      SizedBox(width: 4),
-                                      Text(
-                                      (club['members_count'] ?? club['members']?.length ?? '—').toString(),
-                                      style: TextStyle(color: Colors.grey[300], fontSize: 12),
-                                      ),
-                                      SizedBox(width: 12),
-                                    ],
-                                    ),
-                                  ],
-                                  ),
-                                ),
                                 ],
                               ),
+                              margin: EdgeInsets.only(bottom: 12),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ClubDetailsScreen(
+                                          token: widget.token,
+                                          club: Club.fromMap(Map<String, dynamic>.from(club as Map)),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Row(
+                                      children: [
+                                        // Club logo/avatar if available
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.3),
+                                                blurRadius: 8,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: (club['logo'] ?? club['logo_url']) != null && (club['logo'] ?? club['logo_url']).toString().isNotEmpty
+                                              ? CircleAvatar(
+                                                  backgroundImage: NetworkImage((club['logo'] ?? club['logo_url']).toString()),
+                                                  radius: 28,
+                                                  backgroundColor: Colors.grey[900],
+                                                )
+                                              : CircleAvatar(
+                                                  child: Icon(
+                                                    Club.fromMap(Map<String, dynamic>.from(club as Map)).icon,
+                                                    color: Colors.white70,
+                                                    size: 28,
+                                                  ),
+                                                  radius: 28,
+                                                  backgroundColor: Colors.grey[800],
+                                                ),
+                                        ),
+                                        SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                club['name']?.toString() ?? 'Unnamed Club',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 17,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: -0.3,
+                                                ),
+                                              ),
+                                              SizedBox(height: 6),
+                                              if (club['description'] != null && club['description'].toString().isNotEmpty)
+                                                Text(
+                                                  club['description'].toString(),
+                                                  style: TextStyle(
+                                                    color: Colors.grey[400],
+                                                    fontSize: 13,
+                                                    height: 1.3,
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              SizedBox(height: 8),
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[800]!.withOpacity(0.5),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(Icons.people, size: 14, color: Colors.grey[400]),
+                                                        SizedBox(width: 4),
+                                                        Text(
+                                                          (club['members_count'] ?? club['members']?.length ?? '—').toString(),
+                                                          style: TextStyle(color: Colors.grey[300], fontSize: 12, fontWeight: FontWeight.w500),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  if (club['category'] != null) ...[
+                                                    SizedBox(width: 8),
+                                                    Container(
+                                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                      decoration: BoxDecoration(
+                                                        color: Color(0xFF137FEC).withOpacity(0.2),
+                                                        borderRadius: BorderRadius.circular(6),
+                                                        border: Border.all(color: Color(0xFF137FEC).withOpacity(0.3)),
+                                                      ),
+                                                      child: Text(
+                                                        club['category'].toString(),
+                                                        style: TextStyle(
+                                                          color: Color(0xFF137FEC),
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(Icons.chevron_right, color: Colors.grey[600]),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                         );
@@ -443,38 +713,62 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                     ],
                   ),
                 )
-                else Column(
-                  
-                  children: [
-                    Text(
-                    'You are not a member of any clubs yet.',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.center,
-                    child: ElevatedButton.icon(
-                      icon: Icon(Icons.group_add, color: Colors.white),
-                      label: Text('Join a Club', style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF137FEC),
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                else Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[900]!.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.group_add,
+                          size: 48,
+                          color: Colors.grey[600],
+                        ),
                       ),
-                      onPressed: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ClubListScreen(token: widget.token, clubId: _clubId),
-                          ),
-                        );
-                        await _loadDashboard();
-                      },
-                    ),
+                      SizedBox(height: 20),
+                      Text(
+                        'No Clubs Yet',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Join clubs to connect with like-minded students and participate in exciting events!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.explore, color: Colors.white),
+                        label: Text('Explore Clubs', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF137FEC),
+                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
+                        ),
+                        onPressed: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ClubListScreen(token: widget.token, clubId: _clubId),
+                            ),
+                          );
+                          await _loadDashboard();
+                        },
+                      ),
+                    ],
                   ),
-                  ],
                 ),
               ],
             ),
@@ -528,7 +822,17 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
             // Profile: open user profile management
             if (index == 3) {
               await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => UserProfileManagementScreen()),
+                MaterialPageRoute(
+                  builder: (_) => UserProfileManagementScreen(
+                    token: widget.token,
+                    user: widget.user != null 
+                        ? {
+                            ...widget.user!,
+                            'clubId': _clubId,
+                          }
+                        : null,
+                  ),
+                ),
               );
               return;
             }
@@ -659,11 +963,12 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
       'title': Icons.event_note,
     };
 
-    final status = (data['status'] ?? 'RSVP').toString().toUpperCase();
+    final status = (data['status'] ?? 'Pending').toString().toUpperCase();
     Color statusColor;
     switch (status) {
       case 'CONFIRMED':
       case 'ACTIVE':
+      case 'COMPLETED':
         statusColor = Colors.green[600]!;
         break;
       case 'CANCELLED':
@@ -679,12 +984,18 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     }
     // Fields to show prominently (if present)
     final title = (data['title'] ?? data['name'] ?? '').toString();
-    final rawDateVal = data['date'] ?? data['timestamp'] ?? data['time'] ?? data['start'] ?? data['datetime'] ?? data['dateTime'];
+    // Handle date and time separately - combine if time exists
+    String rawDateVal = data['date'] ?? data['timestamp'] ?? data['start'] ?? data['datetime'] ?? data['dateTime'] ?? '';
+    final eventTime = data['time'];
+    if (rawDateVal.isNotEmpty && eventTime != null && eventTime.toString().isNotEmpty) {
+      // Combine date and time
+      rawDateVal = '$rawDateVal ${eventTime.toString().trim()}';
+    }
     final date = formatDateHuman(rawDateVal);
     final attendees = data['attendees'] ?? data['rsvpCount'] ?? data['capacity'];
     final description = (data['description'] ?? data['details'] ?? '').toString();
     // Build a list of additional fields (exclude already shown)
-    final excluded = {'title', 'name', 'date', 'timestamp', 'time', 'start', 'datetime', 'dateTime', 'status', 'attendees', 'rsvpCount', 'capacity', 'description', 'details'};
+    final excluded = {'title', 'name', 'date', 'timestamp', 'time', 'start', 'datetime', 'dateTime', 'status', 'attendees', 'rsvpCount', 'capacity', 'description', 'details', 'image', 'image_url'};
 
     final additionalEntries = data.entries
         .where((e) => !excluded.contains(e.key))
@@ -727,16 +1038,16 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                   color: Colors.grey[850],
-                  image: data['image'] != null
+                  image: (data['image'] ?? data['image_url']) != null
                       ? DecorationImage(
-                          image: NetworkImage(data['image'].toString()),
+                          image: NetworkImage((data['image'] ?? data['image_url']).toString()),
                           fit: BoxFit.cover,
                           colorFilter:
                               ColorFilter.mode(Colors.black26, BlendMode.darken),
                         )
                       : null,
                 ),
-                child: data['image'] == null
+                child: (data['image'] ?? data['image_url']) == null
                     ? Center(
                         child: Icon(
                           Icons.event,
@@ -998,6 +1309,68 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuickStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF192734),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[800]!,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20,
+            ),
+          ),
+          SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
