@@ -1,19 +1,20 @@
 -- Migration script to add all missing tables and fields
 -- Run this to make the database fully dynamic
+-- Compatible with older MySQL versions (no automatic timestamp defaults)
 
 -- Add missing fields to User table
 ALTER TABLE `User` 
 ADD COLUMN `phone` varchar(20) DEFAULT NULL AFTER `email`,
 ADD COLUMN `major` varchar(100) DEFAULT NULL AFTER `phone`,
-ADD COLUMN `created_at` timestamp NOT NULL DEFAULT current_timestamp() AFTER `role`,
-ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() AFTER `created_at`;
+ADD COLUMN `created_at` datetime DEFAULT NULL AFTER `role`,
+ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `created_at`;
 
 -- Add missing fields to Club table
 ALTER TABLE `Club`
 ADD COLUMN `logo_url` varchar(500) DEFAULT NULL AFTER `description`,
 ADD COLUMN `category` varchar(50) DEFAULT 'General' AFTER `logo_url`,
-ADD COLUMN `created_at` timestamp NOT NULL DEFAULT current_timestamp() AFTER `founded_date`,
-ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() AFTER `created_at`;
+ADD COLUMN `created_at` datetime DEFAULT NULL AFTER `founded_date`,
+ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `created_at`;
 
 -- Add missing fields to Event table
 ALTER TABLE `Event`
@@ -21,14 +22,14 @@ ADD COLUMN `image_url` varchar(500) DEFAULT NULL AFTER `venue`,
 ADD COLUMN `status` enum('Pending','Confirmed','Cancelled','Completed') DEFAULT 'Pending' AFTER `image_url`,
 ADD COLUMN `time` time DEFAULT NULL AFTER `date`,
 ADD COLUMN `capacity` int(11) DEFAULT NULL AFTER `status`,
-ADD COLUMN `created_at` timestamp NOT NULL DEFAULT current_timestamp() AFTER `capacity`,
-ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() AFTER `created_at`;
+ADD COLUMN `created_at` datetime DEFAULT NULL AFTER `capacity`,
+ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `created_at`;
 
 -- Add missing fields to Notification table
 ALTER TABLE `Notification`
-ADD COLUMN `timestamp` timestamp NOT NULL DEFAULT current_timestamp() AFTER `description`,
-ADD COLUMN `created_at` timestamp NOT NULL DEFAULT current_timestamp() AFTER `timestamp`,
-ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() AFTER `created_at`,
+ADD COLUMN `timestamp` datetime DEFAULT NULL AFTER `description`,
+ADD COLUMN `created_at` datetime DEFAULT NULL AFTER `timestamp`,
+ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `created_at`,
 CHANGE COLUMN `description` `description` text DEFAULT NULL;
 
 -- Create NotificationSettings table
@@ -41,8 +42,8 @@ CREATE TABLE IF NOT EXISTS `NotificationSettings` (
   `new_event_announcements` tinyint(1) NOT NULL DEFAULT 1,
   `rsvp_event_reminders` tinyint(1) NOT NULL DEFAULT 1,
   `reminder_time` varchar(50) DEFAULT '2 hours before',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`settings_id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `notificationsettings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_id`) ON DELETE CASCADE
@@ -50,23 +51,33 @@ CREATE TABLE IF NOT EXISTS `NotificationSettings` (
 
 -- Add missing fields to Membership table
 ALTER TABLE `Membership`
-ADD COLUMN `created_at` timestamp NOT NULL DEFAULT current_timestamp() AFTER `join_date`,
-ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() AFTER `created_at`;
+ADD COLUMN `created_at` datetime DEFAULT NULL AFTER `join_date`,
+ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `created_at`;
 
 -- Add missing fields to Finance table
 ALTER TABLE `Finance`
-ADD COLUMN `created_at` timestamp NOT NULL DEFAULT current_timestamp() AFTER `description`,
-ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() AFTER `created_at`;
+ADD COLUMN `created_at` datetime DEFAULT NULL AFTER `description`,
+ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `created_at`;
 
 -- Add missing fields to Registration table
 ALTER TABLE `Registration`
-ADD COLUMN `registered_at` timestamp NOT NULL DEFAULT current_timestamp() AFTER `status`,
-ADD COLUMN `created_at` timestamp NOT NULL DEFAULT current_timestamp() AFTER `registered_at`,
-ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() AFTER `created_at`;
+ADD COLUMN `registered_at` datetime DEFAULT NULL AFTER `status`,
+ADD COLUMN `created_at` datetime DEFAULT NULL AFTER `registered_at`,
+ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `created_at`;
 
 -- Add missing fields to ClubRequest table
 ALTER TABLE `ClubRequest`
-ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() AFTER `requested_at`;
+ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `requested_at`;
+
+-- Set existing rows to have current timestamp values
+UPDATE `User` SET created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL;
+UPDATE `Club` SET created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL;
+UPDATE `Event` SET created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL;
+UPDATE `Notification` SET timestamp = NOW(), created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL;
+UPDATE `Membership` SET created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL;
+UPDATE `Finance` SET created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL;
+UPDATE `Registration` SET registered_at = NOW(), created_at = NOW(), updated_at = NOW() WHERE created_at IS NULL;
+UPDATE `ClubRequest` SET updated_at = NOW() WHERE updated_at IS NULL;
 
 -- Add indexes for better performance
 CREATE INDEX `idx_user_email` ON `User` (`email`);
