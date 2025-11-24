@@ -274,47 +274,37 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
                     ],
                   ),
                 ),
-                if (_latestAnnouncement != null && _latestAnnouncement!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
-                    ),
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF192734),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[800]!),
+                Builder(
+                  builder: (context) {
+                    if (_latestAnnouncement == null || _latestAnnouncement!.isEmpty) {
+                      return SizedBox.shrink();
+                    }
+                    
+                    final nonDismissed = _latestAnnouncement!.where((ann) {
+                      final annMap = Map<String, dynamic>.from(ann as Map);
+                      final annId = annMap['id'] ?? annMap['notification_id'];
+                      if (annId == null) return true;
+                      // Convert to int if possible
+                      final idInt = annId is int ? annId : (annId is num ? annId.toInt() : int.tryParse(annId.toString()));
+                      return idInt == null || !_dismissedAnnouncements.contains(idInt);
+                    }).toList();
+                    
+                    if (nonDismissed.isEmpty) {
+                      return SizedBox.shrink();
+                    }
+                    
+                    final firstAnn = nonDismissed.first;
+                    final announcement = Announcement.fromMap(Map<String, dynamic>.from(firstAnn as Map));
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Latest Announcements',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 12),
-                          ..._latestAnnouncement!.where((ann) {
-                            final annMap = Map<String, dynamic>.from(ann as Map);
-                            final annId = annMap['id'] ?? annMap['notification_id'];
-                            if (annId == null) return true;
-                            // Convert to int if possible
-                            final idInt = annId is int ? annId : (annId is num ? annId.toInt() : int.tryParse(annId.toString()));
-                            return idInt == null || !_dismissedAnnouncements.contains(idInt);
-                          }).map((ann) {
-                            final announcement = Announcement.fromMap(Map<String, dynamic>.from(ann as Map));
-                            return _buildAnnouncementCard(announcement, ann);
-                          }).toList(),
-                        ],
-                      ),
-                    ),
-                  ),
+                      child: _buildAnnouncementCard(announcement, firstAnn),
+                    );
+                  },
+                ),
                 SizedBox(height: 16),
                 events.isNotEmpty
                     ? Padding(
@@ -871,113 +861,141 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
     final annMap = Map<String, dynamic>.from(annData as Map);
     final annId = annMap['id'] ?? annMap['notification_id'];
     
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Color(0xFF192734),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[800]!.withOpacity(0.3)),
-      ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title
-                Text(
-                  announcement.title.isNotEmpty 
-                      ? announcement.title 
-                      : 'Important Announcement!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
-                ),
-                SizedBox(height: 12),
-                // Description
-                if (announcement.description.isNotEmpty)
-                  Text(
-                    announcement.description,
-                    style: TextStyle(
-                      color: Colors.grey[300],
-                      fontSize: 14,
-                      height: 1.4,
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => NotificationViewScreen(
+              token: widget.token,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        margin: EdgeInsets.only(bottom: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF137FEC).withOpacity(0.12),
+              Color(0xFF192734),
+            ],
+          ),
+          border: Border.all(
+            color: Color(0xFF137FEC).withOpacity(0.25),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFF137FEC).withOpacity(0.15),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Main content
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF137FEC).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.campaign,
+                      color: Color(0xFF137FEC),
+                      size: 20,
                     ),
                   ),
-                SizedBox(height: 16),
-                // Learn More link
-                InkWell(
+                  SizedBox(width: 12),
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          announcement.title.isNotEmpty 
+                              ? announcement.title 
+                              : 'Important Announcement!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            height: 1.3,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        // Description
+                        if (announcement.description.isNotEmpty)
+                          Text(
+                            announcement.description,
+                            style: TextStyle(
+                              color: Colors.grey[300],
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Dismiss button in top right
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
                   onTap: () {
-                    // Navigate to notification panel
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => NotificationViewScreen(
-                          token: widget.token,
-                        ),
-                      ),
-                    );
+                    // Dismiss/hide this announcement
+                    if (annId != null) {
+                      setState(() {
+                        // Convert to int if possible
+                        final idInt = annId is int 
+                            ? annId 
+                            : (annId is num 
+                                ? annId.toInt() 
+                                : int.tryParse(annId.toString()));
+                        if (idInt != null) {
+                          _dismissedAnnouncements.add(idInt);
+                        }
+                      });
+                    }
                   },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Learn More',
-                        style: TextStyle(
-                          color: Color(0xFF137FEC),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward,
-                        color: Color(0xFF137FEC),
-                        size: 18,
-                      ),
-                    ],
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: Colors.grey[400],
+                      size: 16,
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          // Dismiss button in top right
-          Positioned(
-            top: 8,
-            right: 8,
-            child: IconButton(
-              icon: Icon(
-                Icons.close,
-                color: Colors.grey[400],
-                size: 20,
               ),
-              onPressed: () {
-                // Dismiss/hide this announcement
-                if (annId != null) {
-                  setState(() {
-                    // Convert to int if possible
-                    final idInt = annId is int 
-                        ? annId 
-                        : (annId is num 
-                            ? annId.toInt() 
-                            : int.tryParse(annId.toString()));
-                    if (idInt != null) {
-                      _dismissedAnnouncements.add(idInt);
-                    }
-                  });
-                }
-              },
-              padding: EdgeInsets.all(4),
-              constraints: BoxConstraints(),
-              tooltip: 'Dismiss',
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
