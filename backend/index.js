@@ -406,13 +406,10 @@ app.delete('/api/admin/users/:userId', verifyToken, async (req, res) => {
             await pool.query('DELETE FROM ClubRequest WHERE user_id = ?', [userId]);
 
             // Delete user's event registrations
-            await pool.query('DELETE FROM EventRegistration WHERE user_id = ?', [userId]);
+            await pool.query('DELETE FROM Registration WHERE user_id = ?', [userId]);
 
             // Delete user's notification settings
             await pool.query('DELETE FROM NotificationSettings WHERE user_id = ?', [userId]);
-
-            // Delete user's notifications (if they are the target)
-            await pool.query('DELETE FROM Notification WHERE user_id = ?', [userId]);
 
             // Finally delete the user
             await pool.query('DELETE FROM User WHERE user_id = ?', [userId]);
