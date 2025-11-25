@@ -17,13 +17,35 @@ A comprehensive digital platform for managing campus clubs, members, events, and
 
 ## Features
 
-- **User Management**: Role-based authentication (Admin, Executive, Member, Guest)
-- **Club Management**: Create, approve, reject, and manage clubs
-- **Membership Management**: Join requests, approval workflow, role assignment
-- **Event Management**: Create events, register members, track attendance
-- **Financial Management**: Track income/expenses, generate financial reports
-- **Notification System**: Broadcast messages and announcements
-- **Dashboard Views**: Role-specific dashboards for different user types
+- **User Management**: 
+  - Role-based authentication (Admin, Executive, Member, Guest)
+  - Admin can delete users with cascading data removal
+  - User profile management and settings
+- **Club Management**: 
+  - Create, approve, reject, and manage clubs
+  - Club details with member management
+  - Club search and filtering
+- **Membership Management**: 
+  - Join requests with approval workflow
+  - Role assignment (Member, Executive)
+  - Member removal capabilities
+- **Event Management**: 
+  - Create and manage events
+  - Event registration and attendance tracking
+  - Event details and notifications
+- **Financial Management**: 
+  - Track income and expenses
+  - Generate financial reports
+  - Financial overview dashboard
+- **Notification System**: 
+  - Broadcast messages and announcements
+  - Notification settings and preferences
+  - Real-time notification updates
+- **Dashboard Views**: 
+  - Role-specific dashboards (Admin, Executive, Member)
+  - Modern dark theme UI with gradient headers
+  - Statistics cards and quick actions
+  - Responsive design for all screen sizes
 
 ## Prerequisites
 
@@ -408,6 +430,15 @@ The frontend API endpoint is configured in `lib/config/api_config.dart`. Update 
 ### Admin
 - `GET /api/admin/stats` - Get system statistics
 - `GET /api/users/list` - Get all users
+- `DELETE /api/admin/users/:userId` - Delete user (Admin only, cascading delete)
+  - **Note**: Deleting a user will automatically remove:
+    - User's memberships
+    - User's club requests
+    - User's event registrations
+    - User's notification settings
+    - User's notifications
+    - The user account itself
+  - Admins cannot delete their own account
 
 **Note**: Most endpoints require authentication via JWT token in the Authorization header: `Bearer <token>`
 
@@ -522,6 +553,26 @@ The frontend API endpoint is configured in `lib/config/api_config.dart`. Update 
 - Clear browser cache and cookies
 - Check XAMPP error logs in `xampp/apache/logs/error.log`
 
+## Recent Updates
+
+### UI/UX Improvements
+- **Modern Dark Theme**: Consistent dark theme across all screens with gradient headers
+- **Enhanced Dashboards**: 
+  - Statistics cards with icons and color coding
+  - Quick action buttons
+  - Improved navigation and layout
+- **Better User Experience**:
+  - Confirmation dialogs for destructive actions
+  - Loading states and error handling
+  - Responsive design for mobile and desktop
+  - Smooth animations and transitions
+
+### New Features
+- **User Deletion**: Admins can delete users with automatic cascading deletion of related data
+- **Announcement System**: Most recent announcements displayed prominently
+- **Enhanced Search**: Improved search functionality across clubs and users
+- **Status Indicators**: Visual status badges for users and clubs
+
 ## Development Tips
 
 1. **Hot Reload**: Flutter supports hot reload. Press `r` in the terminal while the app is running to reload changes.
@@ -533,6 +584,8 @@ The frontend API endpoint is configured in `lib/config/api_config.dart`. Update 
 4. **API Testing**: Use Postman or Insomnia to test API endpoints before integrating with frontend.
 
 5. **Logs**: Check console logs for both backend and frontend to debug issues.
+
+6. **UI Theme**: The app uses a consistent dark theme. Customize colors in individual screen files or create a centralized theme file.
 
 ## Production Deployment
 
