@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36" version="29.1.1">
+  <diagram name="DFD Level 0 - Context Diagram" id="dfd-level-0">
+    <mxGraphModel dx="1042" dy="562" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="system" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" value="Campus Club&#xa;Management System" vertex="1">
+          <mxGeometry height="200" width="350" x="400" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="admin" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;" value="Admin" vertex="1">
+          <mxGeometry height="100" width="80" x="100" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="executive" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;" value="Executive" vertex="1">
+          <mxGeometry height="100" width="80" x="100" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="member" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;" value="Member" vertex="1">
+          <mxGeometry height="100" width="80" x="100" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="database" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;" value="Database" vertex="1">
+          <mxGeometry height="100" width="80" x="950" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="flow1" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;exitX=1;exitY=0;exitDx=0;exitDy=67.5;exitPerimeter=0;" value="Club Management&#xa;Requests">
+          <mxGeometry height="50" relative="1" width="50" x="0.0036" y="32" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="180" y="240" as="sourcePoint" />
+            <mxPoint x="400" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="flow2" edge="1" parent="1" source="system" style="endArrow=block;html=1;rounded=0;exitX=0;exitY=0.2;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0;entryDx=0;entryDy=67.5;entryPerimeter=0;" target="admin" value="Club Management&#xa;Responses">
+          <mxGeometry height="50" relative="1" width="50" x="0.1751" y="34" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="420" y="400" as="sourcePoint" />
+            <mxPoint x="180" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="flow3" edge="1" parent="1" source="executive" style="endArrow=block;html=1;rounded=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1;exitY=0.4;exitDx=0;exitDy=0;exitPerimeter=0;" target="system" value="Event/Member/Finance&#xa;Management Requests">
+          <mxGeometry height="50" relative="1" width="50" x="0.1579" y="25" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="180" y="420" as="sourcePoint" />
+            <mxPoint x="415" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="flow4" edge="1" parent="1" source="system" style="endArrow=block;html=1;rounded=0;exitX=-0.008;exitY=0.825;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.035;entryY=0.574;entryDx=0;entryDy=0;entryPerimeter=0;" target="executive" value="Management&#xa;Responses">
+          <mxGeometry height="50" relative="1" width="50" x="0.1492" y="23" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="370" y="490" as="sourcePoint" />
+            <mxPoint x="150" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="flow5" edge="1" parent="1" source="member" style="endArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitDx=0;exitDy=0;exitPerimeter=0;" target="system" value="Club/Event&#xa;Viewing Requests">
+          <mxGeometry height="50" relative="1" width="50" x="-0.154" y="26" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="170" y="610" as="sourcePoint" />
+            <mxPoint x="692.5" y="510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="flow6" edge="1" parent="1" style="endArrow=block;html=1;rounded=0;entryX=1;entryY=0;entryDx=0;entryDy=67.5;entryPerimeter=0;" target="member" value="Club/Event&#xa;Information">
+          <mxGeometry height="50" relative="1" width="50" x="-0.0268" y="28" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="630" y="500" as="sourcePoint" />
+            <mxPoint x="180" y="680" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="flow7" edge="1" parent="1" source="system" style="endArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="database" value="Data Queries">
+          <mxGeometry height="50" relative="1" width="50" as="geometry" />
+        </mxCell>
+        <mxCell id="flow8" edge="1" parent="1" source="database" style="endArrow=block;html=1;rounded=0;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" target="system" value="Data Results">
+          <mxGeometry height="50" relative="1" width="50" as="geometry" />
+        </mxCell>
+        <mxCell id="flow9" edge="1" parent="1" source="system" style="endArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="database" value="Data Updates">
+          <mxGeometry height="50" relative="1" width="50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
