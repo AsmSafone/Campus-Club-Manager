@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/executive/broadcast_message_screen.dart';
 import 'screens/executive/executive_dashboard_screen.dart';
@@ -13,8 +15,32 @@ import 'screens/auth/auth_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'utils/auth_utils.dart';
+import 'services/push_notification_service.dart';
+import 'package:flutter/foundation.dart';
 
-void main() {
+/// Top-level function to handle background messages
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // This function must be top-level or static
+  debugPrint('Handling background message: ${message.messageId}');
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    // Set up background message handler
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    
+    // Initialize push notification service
+    await PushNotificationService().initialize();
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+    debugPrint('Note: Make sure you have configured Firebase for your project');
+  }
+  
   runApp(const MyApp());
 }
 
@@ -112,6 +138,13 @@ class _StartupState extends State<Startup> {
         try {
           final user = jsonDecode(userJson) as Map<String, dynamic>;
           final role = (user['role'] ?? '').toString();
+          
+          // Register push notification token for logged-in user
+          try {
+            await PushNotificationService().updateAuthToken(token);
+          } catch (e) {
+            debugPrint('Failed to register push notification token: $e');
+          }
           
           if (!mounted) return;
           

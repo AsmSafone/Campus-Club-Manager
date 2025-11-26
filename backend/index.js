@@ -3,8 +3,26 @@ const poolPromise = require('./db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const admin = require('firebase-admin');
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize Firebase Admin SDK
+// Note: In production, use a service account key file
+// For now, we'll use environment variables or initialize with default credentials
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        console.log('Firebase Admin initialized with service account');
+    } catch (err) {
+        console.warn('Firebase Admin initialization failed. Push notifications will be disabled:', err.message);
+    }
+} else {
+    console.warn('FIREBASE_SERVICE_ACCOUNT not set. Push notifications will be disabled.');
+}
 // Enable CORS for browser clients. Adjust origin as needed for production.
 app.use(cors());
 app.use(express.json());
@@ -703,6 +721,14 @@ app.post('/api/clubs/:clubId/events', verifyToken, async (req, res) => {
                 'INSERT INTO Notification (club_id, title, description, timestamp) VALUES (?, ?, ?, NOW())',
                 [clubId, notificationTitle, notificationDescription]
             );
+
+            // Send push notifications to all club members
+            try {
+                await sendPushNotificationToClubMembers(pool, clubId, notificationTitle, notificationDescription);
+            } catch (pushErr) {
+                console.error('Failed to send push notification for new event:', pushErr);
+                // Don't fail the event creation if push notification fails
+            }
         } catch (notifErr) {
             // Log error but don't fail the event creation
             console.error('Failed to create notification for event:', notifErr);
@@ -1759,8 +1785,213 @@ app.post('/api/clubs/:clubId/notifications', verifyToken, async (req, res) => {
         );
 
         res.status(201).json({ message: 'Notification created', id: result.insertId });
+
+        // Send push notifications to all club members
+        try {
+            await sendPushNotificationToClubMembers(pool, clubId, title, description || '');
+        } catch (pushErr) {
+            console.error('Failed to send push notification:', pushErr);
+            // Don't fail the request if push notification fails
+        }
     } catch (err) {
         console.error('Create notification error:', err);
         res.status(500).json({ error: 'Failed to create notification' });
+    }
+});
+
+// Helper function to send push notifications to club members
+async function sendPushNotificationToClubMembers(pool, clubId, title, body) {
+    if (!admin.apps.length) {
+        console.warn('Firebase Admin not initialized. Skipping push notification.');
+        return;
+    }
+
+    try {
+        // Get all members of the club with their device tokens and notification preferences
+        const [members] = await pool.query(`
+            SELECT DISTINCT
+                u.user_id,
+                dt.device_token,
+                ns.push_notifications,
+                ns.club_announcements
+            FROM Membership m
+            JOIN User u ON m.user_id = u.user_id
+            LEFT JOIN DeviceToken dt ON u.user_id = dt.user_id
+            LEFT JOIN NotificationSettings ns ON u.user_id = ns.user_id
+            WHERE m.club_id = ?
+            AND dt.device_token IS NOT NULL
+            AND (ns.push_notifications IS NULL OR ns.push_notifications = 1)
+            AND (ns.club_announcements IS NULL OR ns.club_announcements = 1)
+        `, [clubId]);
+
+        if (members.length === 0) {
+            console.log('No members with push notifications enabled for club:', clubId);
+            return;
+        }
+
+        // Prepare notification message
+        const message = {
+            notification: {
+                title: title,
+                body: body.length > 100 ? body.substring(0, 100) + '...' : body,
+            },
+            data: {
+                type: 'club_announcement',
+                club_id: clubId.toString(),
+                click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            },
+            android: {
+                priority: 'high',
+                notification: {
+                    sound: 'default',
+                    channelId: 'club_notifications',
+                },
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        sound: 'default',
+                    },
+                },
+            },
+        };
+
+        // Send to all device tokens
+        const sendPromises = members.map(member => {
+            return admin.messaging().send({
+                ...message,
+                token: member.device_token,
+            }).catch(err => {
+                console.error(`Failed to send push to user ${member.user_id}:`, err);
+                // If token is invalid, remove it from database
+                if (err.code === 'messaging/invalid-registration-token' || 
+                    err.code === 'messaging/registration-token-not-registered') {
+                    return pool.query('DELETE FROM DeviceToken WHERE device_token = ?', [member.device_token]);
+                }
+            });
+        });
+
+        await Promise.allSettled(sendPromises);
+        console.log(`Push notifications sent to ${members.length} members for club ${clubId}`);
+    } catch (err) {
+        console.error('Error sending push notifications:', err);
+        throw err;
+    }
+}
+
+// Register device token for push notifications
+app.post('/api/push/register-token', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const userId = req.user?.userId || req.user?.user_id;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        const { device_token, platform } = req.body;
+
+        if (!device_token) {
+            return res.status(400).json({ message: 'Device token is required' });
+        }
+
+        const devicePlatform = platform || 'android';
+
+        // Check if token already exists for this user
+        const [existing] = await pool.query(
+            'SELECT token_id FROM DeviceToken WHERE user_id = ? AND device_token = ?',
+            [userId, device_token]
+        );
+
+        if (existing.length > 0) {
+            // Update existing token
+            await pool.query(
+                'UPDATE DeviceToken SET platform = ?, updated_at = NOW() WHERE token_id = ?',
+                [devicePlatform, existing[0].token_id]
+            );
+            return res.json({ message: 'Device token updated successfully' });
+        } else {
+            // Insert new token
+            await pool.query(
+                'INSERT INTO DeviceToken (user_id, device_token, platform, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())',
+                [userId, device_token, devicePlatform]
+            );
+            return res.status(201).json({ message: 'Device token registered successfully' });
+        }
+    } catch (err) {
+        console.error('Register device token error:', err);
+        res.status(500).json({ error: 'Failed to register device token' });
+    }
+});
+
+// Unregister device token
+app.delete('/api/push/unregister-token', verifyToken, async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const userId = req.user?.userId || req.user?.user_id;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        const { device_token } = req.body;
+
+        if (!device_token) {
+            return res.status(400).json({ message: 'Device token is required' });
+        }
+
+        await pool.query(
+            'DELETE FROM DeviceToken WHERE user_id = ? AND device_token = ?',
+            [userId, device_token]
+        );
+
+        res.json({ message: 'Device token unregistered successfully' });
+    } catch (err) {
+        console.error('Unregister device token error:', err);
+        res.status(500).json({ error: 'Failed to unregister device token' });
+    }
+});
+
+// Send test push notification (for testing purposes)
+app.post('/api/push/test', verifyToken, async (req, res) => {
+    try {
+        if (!admin.apps.length) {
+            return res.status(503).json({ message: 'Firebase Admin not initialized' });
+        }
+
+        const pool = await poolPromise;
+        const userId = req.user?.userId || req.user?.user_id;
+        if (!userId) return res.status(401).json({ message: 'Invalid user' });
+
+        const { title, body } = req.body;
+
+        // Get user's device tokens
+        const [tokens] = await pool.query(
+            'SELECT device_token FROM DeviceToken WHERE user_id = ?',
+            [userId]
+        );
+
+        if (tokens.length === 0) {
+            return res.status(404).json({ message: 'No device tokens found for this user' });
+        }
+
+        const message = {
+            notification: {
+                title: title || 'Test Notification',
+                body: body || 'This is a test push notification',
+            },
+            data: {
+                type: 'test',
+                click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            },
+        };
+
+        const sendPromises = tokens.map(token => {
+            return admin.messaging().send({
+                ...message,
+                token: token.device_token,
+            });
+        });
+
+        await Promise.all(sendPromises);
+
+        res.json({ message: 'Test notification sent successfully', count: tokens.length });
+    } catch (err) {
+        console.error('Send test notification error:', err);
+        res.status(500).json({ error: 'Failed to send test notification', details: err.message });
     }
 });

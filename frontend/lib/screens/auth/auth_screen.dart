@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/api_config.dart';
+import '../../services/push_notification_service.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -114,6 +115,13 @@ class _AuthScreenState extends State<AuthScreen> {
           final prefs = await SharedPreferences.getInstance();
           if (token != null) await prefs.setString('auth_token', token.toString());
           if (userData != null) await prefs.setString('auth_user', jsonEncode(userData));
+          
+          // Register push notification token after successful login
+          try {
+            await PushNotificationService().updateAuthToken(token.toString());
+          } catch (e) {
+            debugPrint('Failed to register push notification token: $e');
+          }
         } catch (_) {}
 
         if (!mounted) return;
